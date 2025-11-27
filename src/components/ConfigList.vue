@@ -1332,7 +1332,9 @@ onMounted(() => {
 
 // 暴露方法供父组件调用
 defineExpose({
-  loadConfigs
+  loadConfigs,
+  viewConfig,
+  editConfig
 });
 </script>
 
