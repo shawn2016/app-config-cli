@@ -806,7 +806,28 @@
           <strong>部署说明：</strong>
         </p>
         <ol style="margin: 10px 0; padding-left: 25px; color: #606266;">
-          <li>在 HBuilderX 中打开 uniCloud-tcb 项目</li>
+          <li>
+            开通 UniPush，详细文档见 <el-link href="https://restosuite.sg.larksuite.com/wiki/ILRgwwouTiR12ykrmuGlmNhMgQd" target="_blank" type="primary">UniPush 开通文档</el-link>
+          </li>
+          <li>
+            在 HBuilderX 中打开 uniCloud-tcb 项目
+            <el-popover
+              placement="bottom"
+              :width="800"
+              trigger="hover"
+            >
+              <template #reference>
+                <el-link type="primary" style="margin-left: 4px; cursor: pointer;">（查看示例图）</el-link>
+              </template>
+              <div style="text-align: center;">
+                <img 
+                  src="/hbuilderx-tip.png" 
+                  alt="HBuilderX 打开项目示例" 
+                  style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
+                />
+              </div>
+            </el-popover>
+          </li>
           <li>右键需要部署的云函数文件夹</li>
           <li>选择"上传部署"或"上传部署（云端安装依赖）"</li>
           <li>部署完成后，请前往 <el-link href="https://unicloud.dcloud.net.cn/pages/cloud-function/cloud-function?pageid=tcb-7wzhyxm37yebmba-9cj051c3b56a" target="_blank" type="primary">云函数编辑地址</el-link></li>
@@ -1351,33 +1372,7 @@ const cloudBuildAbortController = ref(null);
 const branches = ref([]);
 const currentBranch = ref('');
 const branchesLoading = ref(false);
-const cloudBuildRules = {
-  versionName: [
-    { required: true, message: '请输入版本号', trigger: 'blur' }
-  ],
-  branch: [
-    { required: true, message: '请选择 Git 分支', trigger: 'change' }
-  ],
-  nextAndroidVersionCode: [
-    { required: true, message: '请输入 Android 构建号', trigger: 'blur' },
-    { type: 'number', min: 1, message: '构建号必须大于 0', trigger: 'blur' }
-  ],
-  nextIosVersionCode: [
-    { required: true, message: '请输入 iOS 构建号', trigger: 'blur' },
-    { type: 'number', min: 1, message: '构建号必须大于 0', trigger: 'blur' }
-  ],
-  platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
-  operation: [{ required: true, message: '请选择操作类型', trigger: 'change' }],
-  versionName: [{ required: true, message: '请输入版本号', trigger: 'blur' }],
-  nextAndroidVersionCode: [
-    { required: true, message: '请输入 Android 构建号', trigger: 'blur' },
-    { type: 'number', min: 1, message: '构建号必须大于 0', trigger: 'blur' }
-  ],
-  nextIosVersionCode: [
-    { required: true, message: '请输入 iOS 构建号', trigger: 'blur' },
-    { type: 'number', min: 1, message: '构建号必须大于 0', trigger: 'blur' }
-  ]
-};
+const cloudBuildRules = {};
 
 // API 地区选项（用于编辑表单）
 const editRegionOptions = [
@@ -1603,7 +1598,12 @@ const generateAppLinks = async () => {
           <strong>重要提示：</strong>
         </p>
         <ul style="margin: 10px 0; padding-left: 20px; color: #606266;">
-          <li>生成后请前往 <a href="${saturnUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>Saturn</strong></a> 构建</li>
+          <li>
+            生成后请前往 <a href="${saturnUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>Saturn</strong></a> 构建
+            <div style="color: #e6a23c; margin-top: 5px; font-size: 13px;">
+              <strong>注意：</strong>必须配置 <strong>teamId</strong> 和 <strong>logo</strong>，否则默认不生成该 applinks 的 html
+            </div>
+          </li>
           <li>生成时依赖该项目，请确保下载了 <a href="${mAppAssociationUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>m-app-association</strong></a> 项目，并且与当前项目平级</li>
         </ul>
       </div>`,
@@ -1713,35 +1713,6 @@ const showCloudBuildDialog = async (alias, config) => {
     }
   }
   
-  // 检查所有云打包必填项（调用 API）
-  try {
-    const checkResponse = await axios.get(`/api/configs/${alias}/check-cloud-build`);
-    if (checkResponse.data && checkResponse.data.success) {
-      const { missingFields, missingFiles } = checkResponse.data;
-      
-      if (missingFields && missingFields.length > 0 || missingFiles && missingFiles.length > 0) {
-        const allMissing = [];
-        if (missingFields && missingFields.length > 0) {
-          allMissing.push(...missingFields);
-        }
-        if (missingFiles && missingFiles.length > 0) {
-          allMissing.push(...missingFiles);
-        }
-        
-        ElMessage.error({
-          message: `品牌 "${alias}" 缺少以下必填项，请先配置后再进行云打包：\n${allMissing.join('、')}`,
-          duration: 0, // 不自动关闭
-          showClose: true
-        });
-        return;
-      }
-    }
-  } catch (error) {
-    console.error('检查云打包必填项失败:', error);
-    ElMessage.error('检查配置项失败，请稍后重试');
-    return;
-  }
-  
   // 计算默认的打包后构建号（当前值 +1）
   const currentAndroid = parseInt(androidVersionCode) || 0;
   const currentIos = parseInt(iosVersionCode) || 0;
@@ -1770,12 +1741,6 @@ const showCloudBuildDialog = async (alias, config) => {
   // 获取默认分支（在分支列表加载后）
   const defaultBranch = getDefaultBranch(alias, platform, environment);
   cloudBuildForm.value.branch = defaultBranch || currentBranch.value || '';
-  
-  // 检查必填项：Git 分支
-  if (!cloudBuildForm.value.branch || cloudBuildForm.value.branch.trim() === '') {
-    ElMessage.error(`请先选择 Git 分支，或确保配置中有 defaultBranch 字段`);
-    return;
-  }
   
   cloudBuildDialogVisible.value = true;
 };
@@ -1806,32 +1771,6 @@ const confirmCloudBuild = async () => {
   if (!cloudBuildFormRef.value) return;
   
   try {
-    // 先验证表单（这会触发所有验证规则）
-    await cloudBuildFormRef.value.validate();
-    
-    // 额外验证：确保必填项不为空（双重检查）
-    if (!cloudBuildForm.value.versionName || cloudBuildForm.value.versionName.trim() === '') {
-      ElMessage.error('请输入版本号');
-      return;
-    }
-    
-    if (!cloudBuildForm.value.branch || cloudBuildForm.value.branch.trim() === '') {
-      ElMessage.error('请选择 Git 分支');
-      return;
-    }
-    
-    // 根据平台验证构建号
-    if (cloudBuildForm.value.platform === 'android') {
-      if (cloudBuildForm.value.nextAndroidVersionCode === null || cloudBuildForm.value.nextAndroidVersionCode === undefined || cloudBuildForm.value.nextAndroidVersionCode <= 0) {
-        ElMessage.error('请输入有效的 Android 构建号（必须大于 0）');
-        return;
-      }
-    } else if (cloudBuildForm.value.platform === 'ios') {
-      if (cloudBuildForm.value.nextIosVersionCode === null || cloudBuildForm.value.nextIosVersionCode === undefined || cloudBuildForm.value.nextIosVersionCode <= 0) {
-        ElMessage.error('请输入有效的 iOS 构建号（必须大于 0）');
-        return;
-      }
-    }
     
     // 使用用户输入的打包后构建号
     const targetAndroidVersionCode = cloudBuildForm.value.nextAndroidVersionCode;
@@ -1842,18 +1781,7 @@ const confirmCloudBuild = async () => {
       ? targetIosVersionCode 
       : targetAndroidVersionCode;
     
-    // 先更新版本号（如果需要）
-    try {
-      await axios.post(`/api/configs/${cloudBuildForm.value.alias}/version`, {
-        versionName: cloudBuildForm.value.versionName,
-        androidVersionCode: cloudBuildForm.value.platform === 'android' ? targetVersionCode : undefined,
-        iosVersionCode: cloudBuildForm.value.platform === 'ios' ? targetVersionCode : undefined,
-        platform: cloudBuildForm.value.platform
-      });
-    } catch (error) {
-      console.error('更新版本号失败:', error);
-      ElMessage.warning('更新版本号失败，将继续使用当前版本号');
-    }
+    // 注意：版本号更新将在后端切换分支和 git pull 之后进行，避免切换分支时因为本地修改而失败
     
     // 关闭配置对话框，打开进度对话框
     cloudBuildDialogVisible.value = false;
