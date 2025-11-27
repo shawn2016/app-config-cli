@@ -1103,7 +1103,7 @@
       :close-on-press-escape="false"
       :show-close="!cloudBuildLoading"
     >
-      <div v-loading="cloudBuildLoading" class="cloud-build-output">
+      <div ref="cloudBuildOutputRef" class="cloud-build-output">
         <div v-if="cloudBuildOutput.length > 0" class="output-content">
           <div
             v-for="(line, index) in cloudBuildOutput"
@@ -1139,7 +1139,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from 'vue';
+import { ref, onMounted, reactive, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document, Search, List, Grid, Setting, Picture, Loading, Link } from '@element-plus/icons-vue';
 import axios from 'axios';
@@ -1369,6 +1369,7 @@ const cloudBuildLoading = ref(false);
 const cloudBuildProgressVisible = ref(false);
 const cloudBuildOutput = ref([]);
 const cloudBuildAbortController = ref(null);
+const cloudBuildOutputRef = ref(null);
 const branches = ref([]);
 const currentBranch = ref('');
 const branchesLoading = ref(false);
@@ -1937,6 +1938,23 @@ const cancelCloudBuild = async () => {
     cloudBuildLoading.value = false;
   }
 };
+
+// 滚动日志到底部
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (cloudBuildOutputRef.value) {
+      cloudBuildOutputRef.value.scrollTop = cloudBuildOutputRef.value.scrollHeight;
+    }
+  });
+};
+
+// 监听日志输出，自动滚动到底部
+watch(
+  () => cloudBuildOutput.value.length,
+  () => {
+    scrollToBottom();
+  }
+);
 
 // 关闭云打包进度对话框
 const closeCloudBuildProgress = () => {
