@@ -28,22 +28,22 @@
       <el-table-column label="操作" width="500" fixed="right">
         <template #default="{ row }">
           <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-            <el-button type="primary" link @click="viewConfig(row.alias)">
+            <el-button type="primary" link @click="viewConfig(row.folderName || row.alias)">
               查看
             </el-button>
-            <el-button type="warning" link @click="editConfig(row.alias)">
+            <el-button type="warning" link @click="editConfig(row.folderName || row.alias)">
               编辑
             </el-button>
-            <el-button type="danger" link @click="deleteConfig(row.alias)">
+            <el-button type="danger" link @click="deleteConfig(row.folderName || row.alias)">
               删除
             </el-button>
-            <el-button type="success" link @click="viewKeystoreInfo(row.alias)">
+            <el-button type="success" link @click="viewKeystoreInfo(row.folderName || row.alias)">
               查看密钥
             </el-button>
-            <el-button type="info" link @click="regenerateKeystore(row.alias)">
+            <el-button type="info" link @click="regenerateKeystore(row.folderName || row.alias)">
               重新生成 Keystore
             </el-button>
-            <el-button type="primary" link @click="generateUnipush(row.alias)">
+            <el-button type="primary" link @click="generateUnipush(row.folderName || row.alias)">
               生成 unipush 云函数
             </el-button>
           </div>
