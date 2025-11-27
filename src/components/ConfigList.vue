@@ -1265,6 +1265,20 @@ const branches = ref([]);
 const currentBranch = ref('');
 const branchesLoading = ref(false);
 const cloudBuildRules = {
+  versionName: [
+    { required: true, message: '请输入版本号', trigger: 'blur' }
+  ],
+  branch: [
+    { required: true, message: '请选择 Git 分支', trigger: 'change' }
+  ],
+  nextAndroidVersionCode: [
+    { required: true, message: '请输入 Android 构建号', trigger: 'blur' },
+    { type: 'number', min: 1, message: '构建号必须大于 0', trigger: 'blur' }
+  ],
+  nextIosVersionCode: [
+    { required: true, message: '请输入 iOS 构建号', trigger: 'blur' },
+    { type: 'number', min: 1, message: '构建号必须大于 0', trigger: 'blur' }
+  ],
   platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
   operation: [{ required: true, message: '请选择操作类型', trigger: 'change' }],
   versionName: [{ required: true, message: '请输入版本号', trigger: 'blur' }],
@@ -1594,20 +1608,57 @@ const showCloudBuildDialog = async (alias, config) => {
   let versionName = config?.versionName || '';
   let androidVersionCode = config?.androidVersionCode || config?.versionCode || '';
   let iosVersionCode = config?.iosVersionCode || config?.versionCode || '';
+  let packagename = config?.packagename || '';
+  let appEnName = config?.appEnName || '';
+  let logoExists = config?.logoExists || false;
+  let dcAppId = config?.dcAppId || '';
   
-  // 如果传入的 config 没有版本信息，尝试从 API 获取（使用 parse=true 参数）
-  if (!versionName && !androidVersionCode && !iosVersionCode) {
+  // 如果传入的 config 没有完整信息，尝试从 API 获取（使用 parse=true 参数）
+  if (!versionName || !packagename || !appEnName) {
     try {
       const response = await axios.get(`/api/configs/${alias}?parse=true`);
       if (response.data) {
         const configData = response.data;
-        versionName = configData.versionName || '';
-        androidVersionCode = configData.androidVersionCode || configData.versionCode || '';
-        iosVersionCode = configData.iosVersionCode || configData.versionCode || '';
+        versionName = versionName || configData.versionName || '';
+        androidVersionCode = androidVersionCode || configData.androidVersionCode || configData.versionCode || '';
+        iosVersionCode = iosVersionCode || configData.iosVersionCode || configData.versionCode || '';
+        packagename = packagename || configData.packagename || '';
+        appEnName = appEnName || configData.appEnName || '';
+        logoExists = logoExists || configData.logoExists || false;
+        dcAppId = dcAppId || configData.dcAppId || '';
       }
     } catch (error) {
       console.error('获取配置信息失败:', error);
     }
+  }
+  
+  // 检查所有云打包必填项（调用 API）
+  try {
+    const checkResponse = await axios.get(`/api/configs/${alias}/check-cloud-build`);
+    if (checkResponse.data && checkResponse.data.success) {
+      const { missingFields, missingFiles } = checkResponse.data;
+      
+      if (missingFields && missingFields.length > 0 || missingFiles && missingFiles.length > 0) {
+        const allMissing = [];
+        if (missingFields && missingFields.length > 0) {
+          allMissing.push(...missingFields);
+        }
+        if (missingFiles && missingFiles.length > 0) {
+          allMissing.push(...missingFiles);
+        }
+        
+        ElMessage.error({
+          message: `品牌 "${alias}" 缺少以下必填项，请先配置后再进行云打包：\n${allMissing.join('、')}`,
+          duration: 0, // 不自动关闭
+          showClose: true
+        });
+        return;
+      }
+    }
+  } catch (error) {
+    console.error('检查云打包必填项失败:', error);
+    ElMessage.error('检查配置项失败，请稍后重试');
+    return;
   }
   
   // 计算默认的打包后构建号（当前值 +1）
@@ -1627,8 +1678,8 @@ const showCloudBuildDialog = async (alias, config) => {
     versionName: versionName,
     androidVersionCode: androidVersionCode,
     iosVersionCode: iosVersionCode,
-    nextAndroidVersionCode: currentAndroid + 1,
-    nextIosVersionCode: currentIos + 1,
+    nextAndroidVersionCode: currentAndroid > 0 ? currentAndroid + 1 : null,
+    nextIosVersionCode: currentIos > 0 ? currentIos + 1 : null,
     branch: ''
   };
   
@@ -1638,6 +1689,12 @@ const showCloudBuildDialog = async (alias, config) => {
   // 获取默认分支（在分支列表加载后）
   const defaultBranch = getDefaultBranch(alias, platform, environment);
   cloudBuildForm.value.branch = defaultBranch || currentBranch.value || '';
+  
+  // 检查必填项：Git 分支
+  if (!cloudBuildForm.value.branch || cloudBuildForm.value.branch.trim() === '') {
+    ElMessage.error(`请先选择 Git 分支，或确保配置中有 defaultBranch 字段`);
+    return;
+  }
   
   cloudBuildDialogVisible.value = true;
 };
@@ -1668,7 +1725,32 @@ const confirmCloudBuild = async () => {
   if (!cloudBuildFormRef.value) return;
   
   try {
+    // 先验证表单（这会触发所有验证规则）
     await cloudBuildFormRef.value.validate();
+    
+    // 额外验证：确保必填项不为空（双重检查）
+    if (!cloudBuildForm.value.versionName || cloudBuildForm.value.versionName.trim() === '') {
+      ElMessage.error('请输入版本号');
+      return;
+    }
+    
+    if (!cloudBuildForm.value.branch || cloudBuildForm.value.branch.trim() === '') {
+      ElMessage.error('请选择 Git 分支');
+      return;
+    }
+    
+    // 根据平台验证构建号
+    if (cloudBuildForm.value.platform === 'android') {
+      if (cloudBuildForm.value.nextAndroidVersionCode === null || cloudBuildForm.value.nextAndroidVersionCode === undefined || cloudBuildForm.value.nextAndroidVersionCode <= 0) {
+        ElMessage.error('请输入有效的 Android 构建号（必须大于 0）');
+        return;
+      }
+    } else if (cloudBuildForm.value.platform === 'ios') {
+      if (cloudBuildForm.value.nextIosVersionCode === null || cloudBuildForm.value.nextIosVersionCode === undefined || cloudBuildForm.value.nextIosVersionCode <= 0) {
+        ElMessage.error('请输入有效的 iOS 构建号（必须大于 0）');
+        return;
+      }
+    }
     
     // 使用用户输入的打包后构建号
     const targetAndroidVersionCode = cloudBuildForm.value.nextAndroidVersionCode;
@@ -1803,6 +1885,13 @@ const confirmCloudBuild = async () => {
       }
     }
   } catch (error) {
+    // 如果是表单验证错误，不显示错误消息（Element Plus 会自动显示）
+    if (error && error.fields) {
+      // 这是表单验证错误，Element Plus 会自动显示错误提示
+      console.log('表单验证失败:', error.fields);
+      return;
+    }
+    
     cloudBuildLoading.value = false;
     if (error.name === 'AbortError') {
       ElMessage.warning('打包已取消');

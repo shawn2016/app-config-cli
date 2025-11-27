@@ -6,6 +6,83 @@
       <el-step title="其他配置" />
       <el-step title="预览确认" />
     </el-steps>
+    
+    <!-- 后续步骤提示 -->
+    <el-alert
+      v-if="currentStep === 3"
+      title="创建配置后的后续步骤"
+      type="warning"
+      :closable="false"
+      show-icon
+      style="margin: 20px 0;"
+    >
+      <template #default>
+        <div style="line-height: 2;">
+          <p style="margin: 0 0 10px 0; font-weight: 500;">配置创建成功后，还需要完成以下步骤：</p>
+          <ol style="margin: 0; padding-left: 20px;">
+            <li>
+              <strong>生成 uni-app 应用</strong>：在 
+              <el-link
+                href="https://dev.dcloud.net.cn/pages/app/list"
+                target="_blank"
+                type="primary"
+                style="margin: 0 4px"
+              >
+                DCloud 开发者中心
+              </el-link>
+              创建 uni-app 应用
+            </li>
+            <li>
+              <strong>开通 UniPush</strong>：在 DCloud 开发者中心开通 UniPush 推送服务
+            </li>
+            <li>
+              <strong>生成 App Links</strong>：在配置列表页面点击"生成 applinks"按钮
+              <br>
+              <span style="color: #909399; font-size: 12px; margin-left: 20px;">
+                （生成成功后需要前往 
+                <el-link
+                  href="https://saturn.restosuite.cn/metadata-project?metadata-project=/metadata/project/P01JBB1TJ7D5YJW1KBSNS57FAPA/cicd&saturn-cicd=%2Fsaturn%2Fservice%2FP01JBB1TJ7D5YJW1KBSNS57FAPA%2FS01JZ825GTMG0SR7JS463A1B355%2Fdetail"
+                  target="_blank"
+                  type="primary"
+                  style="margin: 0 4px"
+                >
+                  Saturn
+                </el-link>
+                构建）
+              </span>
+            </li>
+            <li>
+              <strong>生成云函数</strong>：在配置列表页面点击"生成 unipush 云函数"按钮
+              <br>
+              <span style="color: #909399; font-size: 12px; margin-left: 20px;">
+                （生成成功后需要前往 
+                <el-link
+                  href="https://saturn.restosuite.cn/metadata-project?metadata-project=/metadata/project/P01JBB1TJ7D5YJW1KBSNS57FAPA/cicd&saturn-cicd=%2Fsaturn%2Fservice%2FP01JBB1TJ7D5YJW1KBSNS57FAPA%2FS01JZ825GTMG0SR7JS463A1B355%2Fdetail"
+                  target="_blank"
+                  type="primary"
+                  style="margin: 0 4px"
+                >
+                  Saturn
+                </el-link>
+                构建）
+              </span>
+            </li>
+          </ol>
+          <p style="margin: 10px 0 0 0; color: #909399; font-size: 12px;">
+            <el-icon><InfoFilled /></el-icon>
+            详细操作步骤请参考
+            <el-link
+              href="https://restosuite.sg.larksuite.com/wiki/IwJBwRZ4FirwoJkiLHQlgo3ugYL?from=from_copylink"
+              target="_blank"
+              type="primary"
+              style="margin: 0 4px"
+            >
+              开发参考文档
+            </el-link>
+          </p>
+        </div>
+      </template>
+    </el-alert>
 
     <el-form
       ref="formRef"

@@ -75,7 +75,7 @@ app-config serve --port 8080
 - **其他配置**：版本号、版本代码、语言、Team ID、集团 ID、装修 ID
 - **预览确认**：实时预览生成的 index.ts 配置内容
 - **自动生成**：
-  - packagename 和 iosAppId：`ai.restosuite{alias}`
+  - packagename 和 iosAppId：`ai.restosuite.{alias}`
   - appLinksuffix：`Restosuite{aliasCamelCase}`
   - keystore 路径和密码（固定 123456）
 
