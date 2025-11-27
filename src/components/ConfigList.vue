@@ -1059,12 +1059,13 @@
         <el-form-item label="操作类型" prop="operation">
           <el-radio-group v-model="cloudBuildForm.operation">
             <el-radio label="cloudbuild">云打包</el-radio>
-            <el-radio label="wgt">制作wgt文件</el-radio>
+            <el-radio v-if="cloudBuildForm.isSupportHotUpdate" label="wgt">制作wgt文件</el-radio>
           </el-radio-group>
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
             云打包：完整的云打包流程（包含上传蒲公英、转apk等）<br>
-            制作wgt文件：仅生成wgt文件到downloads目录
+            <span v-if="cloudBuildForm.isSupportHotUpdate">制作wgt文件：仅生成wgt文件到downloads目录</span>
+            <span v-else style="color: #909399;">该品牌不支持热更新，仅支持云打包</span>
           </div>
         </el-form-item>
 
@@ -1362,7 +1363,8 @@ const cloudBuildForm = ref({
   iosVersionCode: '',
   nextAndroidVersionCode: null,
   nextIosVersionCode: null,
-  branch: ''
+  branch: '',
+  isSupportHotUpdate: false // 是否支持热更新
 });
 const cloudBuildFormRef = ref(null);
 const cloudBuildLoading = ref(false);
@@ -1696,6 +1698,7 @@ const showCloudBuildDialog = async (alias, config) => {
   let logoExists = config?.logoExists || false;
   let dcAppId = config?.dcAppId || '';
   let baseUrlRegion = config?.baseUrlRegion || '';
+  let isSupportHotUpdate = config?.isSupportHotUpdate || false;
   
   // 如果传入的 config 没有完整信息，尝试从 API 获取（使用 parse=true 参数）
   if (!versionName || !packagename || !appEnName || !baseUrlRegion) {
@@ -1711,6 +1714,7 @@ const showCloudBuildDialog = async (alias, config) => {
         logoExists = logoExists || configData.logoExists || false;
         dcAppId = dcAppId || configData.dcAppId || '';
         baseUrlRegion = baseUrlRegion || configData.baseUrlRegion || '';
+        isSupportHotUpdate = isSupportHotUpdate || configData.isSupportHotUpdate || false;
       }
     } catch (error) {
       console.error('获取配置信息失败:', error);
@@ -1725,18 +1729,23 @@ const showCloudBuildDialog = async (alias, config) => {
   const environment = baseUrlRegion === 'test' ? 'test' : 'production';
   const platform = 'android'; // 默认平台
   
+  // 根据是否支持热更新决定默认操作类型
+  // 如果不支持热更新，默认使用云打包；如果支持热更新，默认使用 wgt
+  const defaultOperation = isSupportHotUpdate ? 'wgt' : 'cloudbuild';
+  
   cloudBuildForm.value = {
     alias: alias,
     platform: platform,
     environment: environment,
-    operation: 'wgt', // 默认选中 wgt
+    operation: defaultOperation,
     userVersionDesc: '',
     versionName: versionName,
     androidVersionCode: androidVersionCode,
     iosVersionCode: iosVersionCode,
     nextAndroidVersionCode: currentAndroid > 0 ? currentAndroid + 1 : null,
     nextIosVersionCode: currentIos > 0 ? currentIos + 1 : null,
-    branch: ''
+    branch: '',
+    isSupportHotUpdate: isSupportHotUpdate
   };
   
   // 加载分支列表
@@ -1767,7 +1776,8 @@ const closeCloudBuildDialog = () => {
     iosVersionCode: '',
     nextAndroidVersionCode: null,
     nextIosVersionCode: null,
-    branch: ''
+    branch: '',
+    isSupportHotUpdate: false
   };
   if (cloudBuildFormRef.value) {
     cloudBuildFormRef.value.resetFields();
