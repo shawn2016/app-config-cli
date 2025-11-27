@@ -794,6 +794,49 @@
       </template>
     </el-dialog>
 
+    <!-- 生成云函数确认对话框 -->
+    <el-dialog
+      v-model="generateUnipushDialogVisible"
+      title="确认生成云函数"
+      width="600px"
+    >
+      <div style="line-height: 1.8;">
+        <p><strong>确定要生成云函数吗？</strong></p>
+        <p style="color: #e6a23c; margin-top: 15px; margin-bottom: 10px;">
+          <strong>部署说明：</strong>
+        </p>
+        <ol style="margin: 10px 0; padding-left: 25px; color: #606266;">
+          <li>在 HBuilderX 中打开 uniCloud-tcb 项目</li>
+          <li>右键需要部署的云函数文件夹</li>
+          <li>选择"上传部署"或"上传部署（云端安装依赖）"</li>
+          <li>部署完成后，请前往 <el-link href="https://unicloud.dcloud.net.cn/pages/cloud-function/cloud-function?pageid=tcb-7wzhyxm37yebmba-9cj051c3b56a" target="_blank" type="primary">云函数编辑地址</el-link></li>
+          <li>
+            编辑成功后通知志伟新增
+            <el-popover
+              placement="top"
+              :width="800"
+              trigger="hover"
+            >
+              <template #reference>
+                <el-link type="primary" style="margin-left: 4px; cursor: pointer;">（查看示例图）</el-link>
+              </template>
+              <div style="text-align: center;">
+                <img 
+                  src="/cloud-function-tip.png" 
+                  alt="云函数编辑示例" 
+                  style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
+                />
+              </div>
+            </el-popover>
+          </li>
+        </ol>
+      </div>
+      <template #footer>
+        <el-button @click="generateUnipushDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmGenerateUnipush">确定生成</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 查看 Keystore 信息对话框 -->
     <el-dialog
       v-model="keystoreDialogVisible"
@@ -1281,6 +1324,7 @@ const editMobileprovisionExists = ref(false);
 const editOtherFilesUploadRef = ref(null);
 const editOtherFiles = ref([]);
 const editOtherFilesToDelete = ref([]);
+const generateUnipushDialogVisible = ref(false);
 const keystoreDialogVisible = ref(false);
 const keystoreInfo = ref(null);
 const keystoreError = ref('');
@@ -1521,29 +1565,14 @@ const regenerateKeystore = async (alias) => {
 };
 
 // 生成 unipush 云函数（全局操作）
-const generateUnipush = async () => {
-  try {
-    const saturnUrl = 'https://saturn.restosuite.cn/metadata-project?metadata-project=/metadata/project/P01JBB1TJ7D5YJW1KBSNS57FAPA/cicd&saturn-cicd=%2Fsaturn%2Fservice%2FP01JBB1TJ7D5YJW1KBSNS57FAPA%2FS01JZ825GTMG0SR7JS463A1B355%2Fdetail';
-    
-    await ElMessageBox.confirm(
-      `<div style="line-height: 1.8;">
-        <p><strong>确定要生成云函数吗？</strong></p>
-        <p style="color: #e6a23c; margin-top: 10px;">
-          <strong>重要提示：</strong>
-        </p>
-        <ul style="margin: 10px 0; padding-left: 20px; color: #606266;">
-          <li>生成成功后需要前往 <a href="${saturnUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>Saturn</strong></a> 构建</li>
-        </ul>
-      </div>`,
-      '确认生成云函数',
-      {
-        confirmButtonText: '确定生成',
-        cancelButtonText: '取消',
-        type: 'warning',
-        dangerouslyUseHTMLString: true
-      }
-    );
+const generateUnipush = () => {
+  generateUnipushDialogVisible.value = true;
+};
 
+// 确认生成云函数
+const confirmGenerateUnipush = async () => {
+  try {
+    generateUnipushDialogVisible.value = false;
     ElMessage.info('正在生成云函数，请稍候...');
     const response = await axios.post('/api/generate-unipush');
     
@@ -1553,12 +1582,10 @@ const generateUnipush = async () => {
       ElMessage.error(response.data?.error || '生成失败');
     }
   } catch (error) {
-    if (error !== 'cancel') {
-      const errorMsg = error.response?.data?.error || error.message;
-      ElMessage.error('生成失败: ' + errorMsg);
-      if (error.response?.data?.output) {
-        console.error('命令输出:', error.response.data.output);
-      }
+    const errorMsg = error.response?.data?.error || error.message;
+    ElMessage.error('生成失败: ' + errorMsg);
+    if (error.response?.data?.output) {
+      console.error('命令输出:', error.response.data.output);
     }
   }
 };
@@ -1576,8 +1603,8 @@ const generateAppLinks = async () => {
           <strong>重要提示：</strong>
         </p>
         <ul style="margin: 10px 0; padding-left: 20px; color: #606266;">
-          <li>先发布后前往 <a href="${saturnUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>Saturn</strong></a> 构建</li>
-          <li>请确保下载了 <a href="${mAppAssociationUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>m-app-association</strong></a> 项目，并且与当前项目平级</li>
+          <li>生成后请前往 <a href="${saturnUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>Saturn</strong></a> 构建</li>
+          <li>生成时依赖该项目，请确保下载了 <a href="${mAppAssociationUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>m-app-association</strong></a> 项目，并且与当前项目平级</li>
         </ul>
       </div>`,
       '确认生成 applinks',
