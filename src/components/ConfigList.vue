@@ -114,6 +114,9 @@
             <el-button type="primary" link @click="generateUnipush(row.folderName || row.alias)">
               生成 unipush 云函数
             </el-button>
+            <el-button type="warning" link @click="showCloudBuildDialog(row.folderName || row.alias, row)">
+              云打包
+            </el-button>
           </div>
         </template>
       </el-table-column>
@@ -193,6 +196,9 @@
             </el-button>
             <el-button type="primary" link @click="generateUnipush(config.folderName || config.alias)">
               生成 unipush 云函数
+            </el-button>
+            <el-button type="warning" link @click="showCloudBuildDialog(config.folderName || config.alias, config)">
+              云打包
             </el-button>
           </div>
         </div>
@@ -810,13 +816,124 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 云打包对话框 -->
+    <el-dialog
+      v-model="cloudBuildDialogVisible"
+      title="云打包配置"
+      width="600px"
+      :before-close="closeCloudBuildDialog"
+    >
+      <el-form
+        ref="cloudBuildFormRef"
+        :model="cloudBuildForm"
+        label-width="120px"
+        :rules="cloudBuildRules"
+      >
+        <el-form-item label="品牌别名">
+          <el-input v-model="cloudBuildForm.alias" readonly disabled />
+        </el-form-item>
+
+        <el-form-item label="平台" prop="platform">
+          <el-radio-group v-model="cloudBuildForm.platform">
+            <el-radio label="android">Android</el-radio>
+            <el-radio label="ios">iOS</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item label="环境" prop="environment">
+          <el-radio-group v-model="cloudBuildForm.environment">
+            <el-radio label="test">测试环境</el-radio>
+            <el-radio label="production">生产环境</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item label="操作类型" prop="operation">
+          <el-radio-group v-model="cloudBuildForm.operation">
+            <el-radio label="cloudbuild">云打包</el-radio>
+            <el-radio label="wgt">制作wgt文件</el-radio>
+          </el-radio-group>
+          <div class="form-tip">
+            <el-icon><InfoFilled /></el-icon>
+            云打包：完整的云打包流程（包含上传蒲公英、转apk等）<br>
+            制作wgt文件：仅生成wgt文件到downloads目录
+          </div>
+        </el-form-item>
+
+        <el-form-item
+          v-if="cloudBuildForm.operation === 'wgt'"
+          label="版本描述"
+          prop="userVersionDesc"
+        >
+          <el-input
+            v-model="cloudBuildForm.userVersionDesc"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入版本更新描述（可选）"
+          />
+          <div class="form-tip">
+            <el-icon><InfoFilled /></el-icon>
+            版本更新描述，用于wgt文件上传时的描述信息
+          </div>
+        </el-form-item>
+
+        <el-form-item label="不增加版本号">
+          <el-checkbox v-model="cloudBuildForm.noIncrement">
+            不增加版本号（保持当前版本号不变）
+          </el-checkbox>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="closeCloudBuildDialog">取消</el-button>
+        <el-button type="primary" :loading="cloudBuildLoading" @click="confirmCloudBuild">
+          开始打包
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 云打包进度对话框 -->
+    <el-dialog
+      v-model="cloudBuildProgressVisible"
+      title="云打包进度"
+      width="800px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="!cloudBuildLoading"
+    >
+      <div v-loading="cloudBuildLoading" class="cloud-build-output">
+        <div v-if="cloudBuildOutput.length > 0" class="output-content">
+          <div
+            v-for="(line, index) in cloudBuildOutput"
+            :key="index"
+            :class="['output-line', line.type]"
+          >
+            {{ line.text }}
+          </div>
+        </div>
+        <div v-else class="output-placeholder">
+          <el-icon class="loading-icon"><Loading /></el-icon>
+          <span>正在启动打包流程...</span>
+        </div>
+      </div>
+      <template #footer>
+        <el-button
+          v-if="!cloudBuildLoading"
+          type="primary"
+          @click="closeCloudBuildProgress"
+        >
+          关闭
+        </el-button>
+        <el-button v-else disabled>打包进行中...</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document, Search, List, Grid, Setting, Picture } from '@element-plus/icons-vue';
+import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document, Search, List, Grid, Setting, Picture, Loading } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 const loading = ref(false);
@@ -998,6 +1115,24 @@ const keystoreDialogVisible = ref(false);
 const keystoreInfo = ref(null);
 const keystoreError = ref('');
 const keystoreLoading = ref(false);
+const cloudBuildDialogVisible = ref(false);
+const cloudBuildForm = ref({
+  alias: '',
+  platform: 'android',
+  environment: 'test',
+  operation: 'cloudbuild',
+  userVersionDesc: '',
+  noIncrement: false
+});
+const cloudBuildFormRef = ref(null);
+const cloudBuildLoading = ref(false);
+const cloudBuildProgressVisible = ref(false);
+const cloudBuildOutput = ref([]);
+const cloudBuildRules = {
+  platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
+  environment: [{ required: true, message: '请选择环境', trigger: 'change' }],
+  operation: [{ required: true, message: '请选择操作类型', trigger: 'change' }]
+};
 
 // API 地区选项（用于编辑表单）
 const editRegionOptions = [
@@ -1214,6 +1349,139 @@ const generateUnipush = async (alias) => {
       }
     }
   }
+};
+
+// 显示云打包对话框
+const showCloudBuildDialog = (alias, config) => {
+  cloudBuildForm.value = {
+    alias: alias,
+    platform: 'android',
+    environment: config.baseUrlRegion === 'test' ? 'test' : 'production',
+    operation: 'cloudbuild',
+    userVersionDesc: '',
+    noIncrement: false
+  };
+  cloudBuildDialogVisible.value = true;
+};
+
+// 关闭云打包对话框
+const closeCloudBuildDialog = () => {
+  cloudBuildDialogVisible.value = false;
+  cloudBuildForm.value = {
+    alias: '',
+    platform: 'android',
+    environment: 'test',
+    operation: 'cloudbuild',
+    userVersionDesc: '',
+    noIncrement: false
+  };
+  if (cloudBuildFormRef.value) {
+    cloudBuildFormRef.value.resetFields();
+  }
+};
+
+// 确认云打包
+const confirmCloudBuild = async () => {
+  if (!cloudBuildFormRef.value) return;
+  
+  try {
+    await cloudBuildFormRef.value.validate();
+    
+    // 关闭配置对话框，打开进度对话框
+    cloudBuildDialogVisible.value = false;
+    cloudBuildProgressVisible.value = true;
+    cloudBuildLoading.value = true;
+    cloudBuildOutput.value = [];
+    
+    // 使用 fetch 接收流式响应
+    const response = await fetch(`/api/configs/${cloudBuildForm.value.alias}/cloud-build`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        platform: cloudBuildForm.value.platform,
+        environment: cloudBuildForm.value.environment,
+        operation: cloudBuildForm.value.operation,
+        userVersionDesc: cloudBuildForm.value.userVersionDesc || '',
+        noIncrement: cloudBuildForm.value.noIncrement
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === 'success') {
+              cloudBuildLoading.value = false;
+              ElMessage.success('云打包完成');
+              // 解析输出并显示
+              if (data.data.output) {
+                const outputLines = data.data.output.split('\n');
+                outputLines.forEach(text => {
+                  if (text.trim()) {
+                    cloudBuildOutput.value.push({ type: 'info', text });
+                  }
+                });
+              }
+            } else if (data.type === 'error') {
+              cloudBuildLoading.value = false;
+              ElMessage.error(data.data.message || '云打包失败');
+              // 解析错误输出并显示
+              if (data.data.errorOutput) {
+                const errorLines = data.data.errorOutput.split('\n');
+                errorLines.forEach(text => {
+                  if (text.trim()) {
+                    cloudBuildOutput.value.push({ type: 'error', text });
+                  }
+                });
+              }
+            } else if (data.type === 'output') {
+              // 实时输出
+              if (data.data.text) {
+                cloudBuildOutput.value.push({ type: 'info', text: data.data.text });
+                // 限制输出行数，避免内存溢出
+                if (cloudBuildOutput.value.length > 1000) {
+                  cloudBuildOutput.value = cloudBuildOutput.value.slice(-500);
+                }
+              }
+            }
+          } catch (e) {
+            // 忽略解析错误
+          }
+        }
+      }
+    }
+  } catch (error) {
+    cloudBuildLoading.value = false;
+    const errorMsg = error.message || '云打包失败';
+    ElMessage.error('云打包失败: ' + errorMsg);
+    cloudBuildOutput.value.push({ type: 'error', text: errorMsg });
+  }
+};
+
+// 关闭云打包进度对话框
+const closeCloudBuildProgress = () => {
+  cloudBuildProgressVisible.value = false;
+  cloudBuildOutput.value = [];
+  cloudBuildLoading.value = false;
 };
 
 // 处理文件选择
@@ -1663,6 +1931,73 @@ defineExpose({
 </script>
 
 <style scoped>
+.form-tip {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.form-tip .el-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.cloud-build-output {
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 16px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.output-content {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.output-line {
+  margin-bottom: 2px;
+}
+
+.output-line.error {
+  color: #f48771;
+}
+
+.output-line.info {
+  color: #d4d4d4;
+}
+
+.output-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #909399;
+  padding: 40px;
+}
+
+.loading-icon {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .config-list {
   padding: 20px;
 }
