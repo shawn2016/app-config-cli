@@ -1664,6 +1664,7 @@ const handlePlatformChange = () => {
   );
   if (defaultBranch) {
     cloudBuildForm.value.branch = defaultBranch;
+    console.log('defaultBranch:', defaultBranch);
   } else if (currentBranch.value) {
     cloudBuildForm.value.branch = currentBranch.value;
   }
@@ -1693,9 +1694,10 @@ const showCloudBuildDialog = async (alias, config) => {
   let appEnName = config?.appEnName || '';
   let logoExists = config?.logoExists || false;
   let dcAppId = config?.dcAppId || '';
+  let baseUrlRegion = config?.baseUrlRegion || '';
   
   // 如果传入的 config 没有完整信息，尝试从 API 获取（使用 parse=true 参数）
-  if (!versionName || !packagename || !appEnName) {
+  if (!versionName || !packagename || !appEnName || !baseUrlRegion) {
     try {
       const response = await axios.get(`/api/configs/${alias}?parse=true`);
       if (response.data) {
@@ -1707,6 +1709,7 @@ const showCloudBuildDialog = async (alias, config) => {
         appEnName = appEnName || configData.appEnName || '';
         logoExists = logoExists || configData.logoExists || false;
         dcAppId = dcAppId || configData.dcAppId || '';
+        baseUrlRegion = baseUrlRegion || configData.baseUrlRegion || '';
       }
     } catch (error) {
       console.error('获取配置信息失败:', error);
@@ -1717,8 +1720,8 @@ const showCloudBuildDialog = async (alias, config) => {
   const currentAndroid = parseInt(androidVersionCode) || 0;
   const currentIos = parseInt(iosVersionCode) || 0;
   
-  // 确定环境
-  const environment = config?.baseUrlRegion === 'test' ? 'test' : 'production';
+  // 确定环境（精准匹配：只有 baseUrlRegion === 'test' 才是测试环境，其他都是生产环境）
+  const environment = baseUrlRegion === 'test' ? 'test' : 'production';
   const platform = 'android'; // 默认平台
   
   cloudBuildForm.value = {
@@ -1738,8 +1741,12 @@ const showCloudBuildDialog = async (alias, config) => {
   // 加载分支列表
   await loadBranches();
   
-  // 获取默认分支（在分支列表加载后）
-  const defaultBranch = getDefaultBranch(alias, platform, environment);
+  // 获取默认分支（在分支列表加载后，使用 cloudBuildForm.value 中的值确保精准匹配）
+  const defaultBranch = getDefaultBranch(
+    cloudBuildForm.value.alias,
+    cloudBuildForm.value.platform,
+    cloudBuildForm.value.environment
+  );
   cloudBuildForm.value.branch = defaultBranch || currentBranch.value || '';
   
   cloudBuildDialogVisible.value = true;
