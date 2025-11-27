@@ -15,29 +15,38 @@
       empty-text="暂无配置，请先创建"
     >
       <el-table-column prop="alias" label="品牌别名" width="150" />
-      <el-table-column prop="path" label="路径" />
+      <el-table-column prop="appDescription" label="描述" min-width="200">
+        <template #default="{ row }">
+          {{ row.appDescription || '-' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="createdAt" label="创建时间" width="180">
         <template #default="{ row }">
           {{ formatDate(row.createdAt) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="320" fixed="right">
+      <el-table-column label="操作" width="500" fixed="right">
         <template #default="{ row }">
-          <el-button type="primary" link @click="viewConfig(row.alias)">
-            查看
-          </el-button>
-          <el-button type="warning" link @click="editConfig(row.alias)">
-            编辑
-          </el-button>
-          <el-button type="danger" link @click="deleteConfig(row.alias)">
-            删除
-          </el-button>
-          <el-button type="success" link @click="viewKeystoreInfo(row.alias)">
-            查看密钥
-          </el-button>
-          <el-button type="info" link @click="regenerateKeystore(row.alias)">
-            重新生成 Keystore
-          </el-button>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+            <el-button type="primary" link @click="viewConfig(row.alias)">
+              查看
+            </el-button>
+            <el-button type="warning" link @click="editConfig(row.alias)">
+              编辑
+            </el-button>
+            <el-button type="danger" link @click="deleteConfig(row.alias)">
+              删除
+            </el-button>
+            <el-button type="success" link @click="viewKeystoreInfo(row.alias)">
+              查看密钥
+            </el-button>
+            <el-button type="info" link @click="regenerateKeystore(row.alias)">
+              重新生成 Keystore
+            </el-button>
+            <el-button type="primary" link @click="generateUnipush(row.alias)">
+              生成 unipush 云函数
+            </el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -847,6 +856,38 @@ const regenerateKeystore = async (alias) => {
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('生成失败: ' + (error.response?.data?.error || error.message));
+    }
+  }
+};
+
+// 生成 unipush 云函数
+const generateUnipush = async (alias) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要为品牌 "${alias}" 生成 unipush 云函数吗？`,
+      '确认操作',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    );
+
+    ElMessage.info('正在生成 unipush 云函数，请稍候...');
+    const response = await axios.post(`/api/configs/${alias}/generate-unipush`);
+    
+    if (response.data && response.data.success) {
+      ElMessage.success(response.data.message || 'unipush 云函数生成成功');
+    } else {
+      ElMessage.error(response.data?.error || '生成失败');
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      const errorMsg = error.response?.data?.error || error.message;
+      ElMessage.error('生成失败: ' + errorMsg);
+      if (error.response?.data?.output) {
+        console.error('命令输出:', error.response.data.output);
+      }
     }
   }
 };
