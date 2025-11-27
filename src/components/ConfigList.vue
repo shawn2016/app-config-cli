@@ -1,7 +1,6 @@
 <template>
   <div class="config-list">
     <div class="list-header">
-      <h3>已有品牌配置</h3>
       <div class="header-actions">
         <div class="search-bar">
           <el-input
@@ -54,6 +53,10 @@
             <el-button type="success" @click="generateAppLinks">
               <el-icon><Link /></el-icon>
               生成 applinks
+            </el-button>
+            <el-button type="primary" @click="generateUnipush">
+              <el-icon><Document /></el-icon>
+              生成云函数
             </el-button>
           </template>
         </div>
@@ -157,9 +160,6 @@
               </el-button>
               <el-button type="info" link @click="regenerateKeystore(row.folderName || row.alias)">
                 重新生成 Keystore
-              </el-button>
-              <el-button type="primary" link @click="generateUnipush(row.folderName || row.alias)">
-                生成 unipush 云函数
               </el-button>
             </template>
             <el-button type="warning" link @click="showCloudBuildDialog(row.folderName || row.alias, row)">
@@ -276,9 +276,6 @@
               </el-button>
               <el-button type="info" link @click="regenerateKeystore(config.folderName || config.alias)">
                 重新生成 Keystore
-              </el-button>
-              <el-button type="primary" link @click="generateUnipush(config.folderName || config.alias)">
-                生成 unipush 云函数
               </el-button>
             </template>
             <el-button type="warning" link @click="showCloudBuildDialog(config.folderName || config.alias, config)">
@@ -742,6 +739,49 @@
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
             功能开关配置：企业包（是否支持企业版）、热更新（是否支持代码热更新）。测试环境开关已与 API 地区绑定，选择测试环境时自动勾选，不可手动修改
+          </div>
+        </el-form-item>
+
+        <el-divider content-position="left">其他文件</el-divider>
+        <el-form-item label="其他文件">
+          <div style="width: 100%;">
+            <div v-if="editOtherFiles.length > 0" style="margin-bottom: 12px;">
+              <div 
+                v-for="(file, index) in editOtherFiles" 
+                :key="index"
+                style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6; margin-bottom: 8px;"
+              >
+                <el-icon style="color: #67c23a;"><Document /></el-icon>
+                <span style="font-size: 14px; flex: 1;">{{ file.filename || file.name }}</span>
+                <el-button
+                  type="danger"
+                  :icon="Delete"
+                  circle
+                  size="small"
+                  @click="removeEditOtherFile(index, file.filename || file.name)"
+                  title="删除文件"
+                />
+              </div>
+            </div>
+            <el-upload
+              ref="editOtherFilesUploadRef"
+              :auto-upload="false"
+              :on-change="handleEditOtherFileChange"
+              :on-remove="handleEditOtherFileRemove"
+              :multiple="true"
+              :show-file-list="false"
+            >
+              <template #trigger>
+                <el-button type="primary">
+                  <el-icon><Upload /></el-icon>
+                  选择文件
+                </el-button>
+              </template>
+            </el-upload>
+            <div class="form-tip" style="margin-top: 8px;">
+              <el-icon><InfoFilled /></el-icon>
+              上传其他文件到 <code>appConfig/{{ editingConfig?.alias || '品牌别名' }}/other/</code> 目录，用于存放如 AuthKey、google-services.json 等配置文件。支持上传多个文件，文件类型不限。
+            </div>
           </div>
         </el-form-item>
       </el-form>
@@ -1238,6 +1278,9 @@ const editMobileprovisionUploadRef = ref(null);
 const editMobileprovisionFile = ref(null);
 const editMobileprovisionFileName = ref('');
 const editMobileprovisionExists = ref(false);
+const editOtherFilesUploadRef = ref(null);
+const editOtherFiles = ref([]);
+const editOtherFilesToDelete = ref([]);
 const keystoreDialogVisible = ref(false);
 const keystoreInfo = ref(null);
 const keystoreError = ref('');
@@ -1477,24 +1520,35 @@ const regenerateKeystore = async (alias) => {
   }
 };
 
-// 生成 unipush 云函数
-const generateUnipush = async (alias) => {
+// 生成 unipush 云函数（全局操作）
+const generateUnipush = async () => {
   try {
+    const saturnUrl = 'https://saturn.restosuite.cn/metadata-project?metadata-project=/metadata/project/P01JBB1TJ7D5YJW1KBSNS57FAPA/cicd&saturn-cicd=%2Fsaturn%2Fservice%2FP01JBB1TJ7D5YJW1KBSNS57FAPA%2FS01JZ825GTMG0SR7JS463A1B355%2Fdetail';
+    
     await ElMessageBox.confirm(
-      `确定要为品牌 "${alias}" 生成 unipush 云函数吗？`,
-      '确认操作',
+      `<div style="line-height: 1.8;">
+        <p><strong>确定要生成云函数吗？</strong></p>
+        <p style="color: #e6a23c; margin-top: 10px;">
+          <strong>重要提示：</strong>
+        </p>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #606266;">
+          <li>生成成功后需要前往 <a href="${saturnUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>Saturn</strong></a> 构建</li>
+        </ul>
+      </div>`,
+      '确认生成云函数',
       {
-        confirmButtonText: '确定',
+        confirmButtonText: '确定生成',
         cancelButtonText: '取消',
-        type: 'info'
+        type: 'warning',
+        dangerouslyUseHTMLString: true
       }
     );
 
-    ElMessage.info('正在生成 unipush 云函数，请稍候...');
-    const response = await axios.post(`/api/configs/${alias}/generate-unipush`);
+    ElMessage.info('正在生成云函数，请稍候...');
+    const response = await axios.post('/api/generate-unipush');
     
     if (response.data && response.data.success) {
-      ElMessage.success(response.data.message || 'unipush 云函数生成成功');
+      ElMessage.success(response.data.message || '云函数生成成功');
     } else {
       ElMessage.error(response.data?.error || '生成失败');
     }
@@ -1989,6 +2043,14 @@ const editConfig = async (alias) => {
       editMobileprovisionExists.value = false;
       editMobileprovisionFileName.value = '';
     }
+
+    // 加载 Other 文件列表
+    try {
+      const otherFilesResponse = await axios.get(`/api/configs/${alias}/other`);
+      editOtherFiles.value = otherFilesResponse.data.files || [];
+    } catch (error) {
+      editOtherFiles.value = [];
+    }
     
     // 重置文件
     editLogoFile.value = null;
@@ -1997,6 +2059,7 @@ const editConfig = async (alias) => {
     editP12UploadRef.value?.clearFiles();
     editMobileprovisionFile.value = null;
     editMobileprovisionUploadRef.value?.clearFiles();
+    editOtherFilesToDelete.value = [];
     
     editDialogVisible.value = true;
   } catch (error) {
@@ -2020,6 +2083,9 @@ const closeEditDialog = () => {
   editMobileprovisionFileName.value = '';
   editMobileprovisionExists.value = false;
   editMobileprovisionUploadRef.value?.clearFiles();
+  editOtherFiles.value = [];
+  editOtherFilesToDelete.value = [];
+  editOtherFilesUploadRef.value?.clearFiles();
 };
 
 // 处理编辑时的地区变化
@@ -2091,6 +2157,36 @@ const saveEditConfig = async () => {
         ElMessage.success('Mobileprovision 文件上传成功！');
       } catch (error) {
         ElMessage.warning('配置更新成功，但 Mobileprovision 文件上传失败：' + (error.response?.data?.error || error.message));
+      }
+    }
+
+    // 删除标记为删除的 Other 文件
+    for (const filename of editOtherFilesToDelete.value) {
+      try {
+        await axios.delete(`/api/configs/${editingConfig.value.alias}/other/${encodeURIComponent(filename)}`);
+      } catch (error) {
+        ElMessage.warning(`删除文件 "${filename}" 失败：` + (error.response?.data?.error || error.message));
+      }
+    }
+
+    // 上传新的 Other 文件
+    const newOtherFiles = editOtherFiles.value.filter(f => f.raw);
+    if (newOtherFiles.length > 0) {
+      for (const file of newOtherFiles) {
+        try {
+          const formDataOther = new FormData();
+          formDataOther.append('file', file.raw);
+          await axios.post(`/api/configs/${editingConfig.value.alias}/other`, formDataOther, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        } catch (error) {
+          ElMessage.warning(`文件 "${file.name}" 上传失败：` + (error.response?.data?.error || error.message));
+        }
+      }
+      if (newOtherFiles.length > 0) {
+        ElMessage.success(`成功上传 ${newOtherFiles.length} 个其他文件！`);
       }
     }
     
@@ -2264,6 +2360,36 @@ const deleteEditMobileprovision = async () => {
       ElMessage.error('删除失败: ' + (error.response?.data?.error || error.message));
     }
   }
+};
+
+// 处理编辑时的 Other 文件选择
+const handleEditOtherFileChange = (file) => {
+  // 检查是否已存在同名文件（已存在的文件或新上传的文件）
+  const existingIndex = editOtherFiles.value.findIndex(f => (f.filename || f.name) === file.name);
+  if (existingIndex >= 0) {
+    ElMessage.warning(`文件 "${file.name}" 已存在，将替换原有文件`);
+    editOtherFiles.value[existingIndex] = { raw: file.raw, name: file.name, filename: file.name };
+  } else {
+    editOtherFiles.value.push({ raw: file.raw, name: file.name, filename: file.name });
+  }
+};
+
+// 处理编辑时的 Other 文件移除
+const handleEditOtherFileRemove = (file) => {
+  const index = editOtherFiles.value.findIndex(f => (f.filename || f.name) === file.name);
+  if (index >= 0) {
+    editOtherFiles.value.splice(index, 1);
+  }
+};
+
+// 移除编辑时的 Other 文件
+const removeEditOtherFile = (index, filename) => {
+  const file = editOtherFiles.value[index];
+  // 如果是已存在的文件（有 filename 但没有 raw），标记为删除
+  if (file.filename && !file.raw) {
+    editOtherFilesToDelete.value.push(filename);
+  }
+  editOtherFiles.value.splice(index, 1);
 };
 
 // 复制到剪贴板

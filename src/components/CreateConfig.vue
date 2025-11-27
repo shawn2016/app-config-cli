@@ -586,6 +586,49 @@
             功能开关配置：企业包（是否支持企业版）、热更新（是否支持代码热更新）。测试环境开关已与 API 地区绑定，选择测试环境时自动勾选，不可手动修改
           </div>
         </el-form-item>
+
+        <el-divider content-position="left">其他文件</el-divider>
+        <el-form-item label="其他文件">
+          <div style="width: 100%;">
+            <div v-if="otherFiles.length > 0" style="margin-bottom: 12px;">
+              <div 
+                v-for="(file, index) in otherFiles" 
+                :key="index"
+                style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6; margin-bottom: 8px;"
+              >
+                <el-icon style="color: #67c23a;"><Document /></el-icon>
+                <span style="font-size: 14px; flex: 1;">{{ file.name || file.filename }}</span>
+                <el-button
+                  type="danger"
+                  :icon="Delete"
+                  circle
+                  size="small"
+                  @click="removeOtherFile(index)"
+                  title="删除文件"
+                />
+              </div>
+            </div>
+            <el-upload
+              ref="otherFilesUploadRef"
+              :auto-upload="false"
+              :on-change="handleOtherFileChange"
+              :on-remove="handleOtherFileRemove"
+              :multiple="true"
+              :show-file-list="false"
+            >
+              <template #trigger>
+                <el-button type="primary">
+                  <el-icon><Upload /></el-icon>
+                  选择文件
+                </el-button>
+              </template>
+            </el-upload>
+            <div class="form-tip" style="margin-top: 8px;">
+              <el-icon><InfoFilled /></el-icon>
+              上传其他文件到 <code>appConfig/{{ formData.alias || '品牌别名' }}/other/</code> 目录，用于存放如 AuthKey、google-services.json 等配置文件。支持上传多个文件，文件类型不限。
+            </div>
+          </div>
+        </el-form-item>
       </div>
 
       <!-- 步骤 4: 预览确认 -->
@@ -648,6 +691,8 @@ const p12FileName = ref('');
 const mobileprovisionUploadRef = ref(null);
 const mobileprovisionFile = ref(null);
 const mobileprovisionFileName = ref('');
+const otherFilesUploadRef = ref(null);
+const otherFiles = ref([]);
 
 const formData = reactive({
   alias: '',
@@ -971,6 +1016,31 @@ const deleteP12File = () => {
   p12UploadRef.value?.clearFiles();
 };
 
+// 处理 Other 文件选择
+const handleOtherFileChange = (file) => {
+  // 检查是否已存在同名文件
+  const existingIndex = otherFiles.value.findIndex(f => (f.name || f.filename) === file.name);
+  if (existingIndex >= 0) {
+    ElMessage.warning(`文件 "${file.name}" 已存在，将替换原有文件`);
+    otherFiles.value[existingIndex] = { raw: file.raw, name: file.name };
+  } else {
+    otherFiles.value.push({ raw: file.raw, name: file.name });
+  }
+};
+
+// 处理 Other 文件移除
+const handleOtherFileRemove = (file) => {
+  const index = otherFiles.value.findIndex(f => (f.name || f.filename) === file.name);
+  if (index >= 0) {
+    otherFiles.value.splice(index, 1);
+  }
+};
+
+// 移除 Other 文件
+const removeOtherFile = (index) => {
+  otherFiles.value.splice(index, 1);
+};
+
 // 处理 Mobileprovision 文件选择
 const handleMobileprovisionChange = (file) => {
   // 验证文件类型
@@ -1106,6 +1176,28 @@ const submitForm = async () => {
         ElMessage.warning('配置创建成功，但 Mobileprovision 文件上传失败：' + (error.response?.data?.error || error.message));
       }
     }
+
+    // 如果有 Other 文件，上传其他文件
+    if (otherFiles.value.length > 0) {
+      for (const file of otherFiles.value) {
+        if (file.raw) {
+          try {
+            const formDataOther = new FormData();
+            formDataOther.append('file', file.raw);
+            await axios.post(`/api/configs/${formData.alias}/other`, formDataOther, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            });
+          } catch (error) {
+            ElMessage.warning(`文件 "${file.name}" 上传失败：` + (error.response?.data?.error || error.message));
+          }
+        }
+      }
+      if (otherFiles.value.length > 0) {
+        ElMessage.success(`成功上传 ${otherFiles.value.length} 个其他文件！`);
+      }
+    }
     
     // 重置表单
     Object.assign(formData, {
@@ -1143,6 +1235,8 @@ const submitForm = async () => {
     mobileprovisionFile.value = null;
     mobileprovisionFileName.value = '';
     mobileprovisionUploadRef.value?.clearFiles();
+    otherFiles.value = [];
+    otherFilesUploadRef.value?.clearFiles();
     currentStep.value = 0;
     formRef.value?.resetFields();
     

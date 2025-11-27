@@ -1,7 +1,10 @@
 <template>
   <el-container class="app-container">
     <el-header class="app-header">
-      <h1>App Config 配置管理</h1>
+      <h1>
+        商户app 工具
+        <span style="font-size: 14px; font-weight: normal; margin-left: 8px; opacity: 0.8;">（{{ appVersion }}）</span>
+      </h1>
       <div class="user-info">
         <el-tag :type="userRole === 'developer' ? 'success' : 'info'">
           {{ userRole === 'developer' ? '开发人员' : '测试人员' }}
@@ -13,10 +16,10 @@
     </el-header>
     <el-main class="app-main">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane v-if="userRole === 'developer'" label="创建新配置" name="create">
+        <el-tab-pane v-if="userRole === 'developer'" label="新建应用" name="create">
           <CreateConfig @config-created="handleConfigCreated" />
         </el-tab-pane>
-        <el-tab-pane label="查看已有配置" name="list">
+        <el-tab-pane label="应用列表" name="list">
           <ConfigList ref="configListRef" :user-role="userRole" />
         </el-tab-pane>
       </el-tabs>
@@ -79,12 +82,14 @@ import { ref, nextTick, onMounted } from 'vue';
 import { User, Monitor, Check } from '@element-plus/icons-vue';
 import CreateConfig from './components/CreateConfig.vue';
 import ConfigList from './components/ConfigList.vue';
+import axios from 'axios';
 
 const activeTab = ref('list');
 const configListRef = ref(null);
 const userRole = ref('developer'); // 'developer' 或 'tester'
 const showRoleDialog = ref(false);
 const selectedRole = ref('developer');
+const appVersion = ref('1.0.7'); // 默认版本号
 
 const handleTabChange = (name) => {
   // 切换标签页时的处理
@@ -135,9 +140,22 @@ const initRole = () => {
   }
 };
 
+// 获取应用版本号
+const loadAppVersion = async () => {
+  try {
+    const response = await axios.get('/api/version');
+    if (response.data && response.data.version) {
+      appVersion.value = response.data.version;
+    }
+  } catch (error) {
+    console.warn('获取版本号失败，使用默认版本号:', error);
+  }
+};
+
 // 页面加载时初始化身份
 onMounted(() => {
   initRole();
+  loadAppVersion();
   nextTick(() => {
     if (configListRef.value && configListRef.value.loadConfigs) {
       configListRef.value.loadConfigs();
