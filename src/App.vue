@@ -17,11 +17,11 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted } from 'vue';
 import CreateConfig from './components/CreateConfig.vue';
 import ConfigList from './components/ConfigList.vue';
 
-const activeTab = ref('create');
+const activeTab = ref('list');
 const configListRef = ref(null);
 
 const handleTabChange = (name) => {
@@ -32,6 +32,15 @@ const handleTabChange = (name) => {
     }
   });
 };
+
+// 页面加载时加载配置列表
+onMounted(() => {
+  nextTick(() => {
+    if (configListRef.value && configListRef.value.loadConfigs) {
+      configListRef.value.loadConfigs();
+    }
+  });
+});
 
 const handleConfigCreated = () => {
   // 配置创建成功后，切换到列表页并刷新
