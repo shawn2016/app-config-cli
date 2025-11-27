@@ -11,13 +11,6 @@
         <el-tab-pane label="查看已有配置" name="list">
           <ConfigList ref="configListRef" />
         </el-tab-pane>
-        <el-tab-pane label="环境展示" name="environment">
-          <EnvironmentView
-            ref="environmentViewRef"
-            @view-config="handleViewConfig"
-            @edit-config="handleEditConfig"
-          />
-        </el-tab-pane>
       </el-tabs>
     </el-main>
   </el-container>
@@ -27,19 +20,15 @@
 import { ref, nextTick } from 'vue';
 import CreateConfig from './components/CreateConfig.vue';
 import ConfigList from './components/ConfigList.vue';
-import EnvironmentView from './components/EnvironmentView.vue';
 
 const activeTab = ref('create');
 const configListRef = ref(null);
-const environmentViewRef = ref(null);
 
 const handleTabChange = (name) => {
   // 切换标签页时的处理
   nextTick(() => {
     if (name === 'list' && configListRef.value && configListRef.value.loadConfigs) {
       configListRef.value.loadConfigs();
-    } else if (name === 'environment' && environmentViewRef.value && environmentViewRef.value.loadConfigs) {
-      environmentViewRef.value.loadConfigs();
     }
   });
 };
@@ -50,26 +39,6 @@ const handleConfigCreated = () => {
   nextTick(() => {
     if (configListRef.value && configListRef.value.loadConfigs) {
       configListRef.value.loadConfigs();
-    }
-  });
-};
-
-const handleViewConfig = (identifier) => {
-  // 切换到列表页并查看配置
-  activeTab.value = 'list';
-  nextTick(() => {
-    if (configListRef.value && configListRef.value.viewConfig) {
-      configListRef.value.viewConfig(identifier);
-    }
-  });
-};
-
-const handleEditConfig = (identifier) => {
-  // 切换到列表页并编辑配置
-  activeTab.value = 'list';
-  nextTick(() => {
-    if (configListRef.value && configListRef.value.editConfig) {
-      configListRef.value.editConfig(identifier);
     }
   });
 };

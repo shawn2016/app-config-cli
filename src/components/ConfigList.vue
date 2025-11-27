@@ -2,27 +2,95 @@
   <div class="config-list">
     <div class="list-header">
       <h3>已有品牌配置</h3>
-      <el-button type="primary" @click="showImportDialog = true">
-        <el-icon><Upload /></el-icon>
-        导入配置
-      </el-button>
+      <div class="header-actions">
+        <div class="search-bar">
+          <el-input
+            v-model="searchText"
+            placeholder="搜索品牌名、应用名、英文名等..."
+            clearable
+            style="width: 300px; margin-right: 10px;"
+            @input="handleSearch"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <el-select
+            v-model="filterRegion"
+            placeholder="筛选环境"
+            clearable
+            style="width: 150px; margin-right: 10px;"
+            @change="handleSearch"
+          >
+            <el-option label="全部" value="" />
+            <el-option label="美国 (US)" value="us" />
+            <el-option label="东南亚 (SEA)" value="sea" />
+            <el-option label="欧洲 (EU)" value="eu" />
+            <el-option label="测试环境 (TEST)" value="test" />
+          </el-select>
+        </div>
+        <div class="view-controls">
+          <el-button-group>
+            <el-button
+              :type="viewMode === 'list' ? 'primary' : ''"
+              @click="viewMode = 'list'"
+            >
+              <el-icon><List /></el-icon>
+              列表
+            </el-button>
+            <el-button
+              :type="viewMode === 'card' ? 'primary' : ''"
+              @click="viewMode = 'card'"
+            >
+              <el-icon><Grid /></el-icon>
+              卡片
+            </el-button>
+          </el-button-group>
+          <el-button @click="showFieldConfigDialog = true">
+            <el-icon><Setting /></el-icon>
+            配置字段
+          </el-button>
+          <el-button type="primary" @click="showImportDialog = true">
+            <el-icon><Upload /></el-icon>
+            导入配置
+          </el-button>
+        </div>
+      </div>
     </div>
 
+    <!-- 列表视图 -->
     <el-table
+      v-if="viewMode === 'list'"
       v-loading="loading"
-      :data="configs"
+      :data="filteredConfigs"
       style="width: 100%"
       empty-text="暂无配置，请先创建"
     >
-      <el-table-column prop="alias" label="品牌别名" width="150" />
-      <el-table-column prop="appDescription" label="描述" min-width="200">
+      <el-table-column
+        v-for="field in visibleFields"
+        :key="field.key"
+        :prop="field.key"
+        :label="field.label"
+        :width="field.width"
+        :min-width="field.minWidth"
+      >
         <template #default="{ row }">
-          {{ row.appDescription || '-' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="createdAt" label="创建时间" width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.createdAt) }}
+          <template v-if="field.key === 'baseUrlRegion'">
+            <el-tag
+              v-if="row[field.key]"
+              :type="getRegionTagType(row[field.key])"
+              size="small"
+            >
+              {{ getRegionLabel(row[field.key]) }}
+            </el-tag>
+            <span v-else>-</span>
+          </template>
+          <template v-else-if="field.key === 'createdAt'">
+            {{ formatDate(row[field.key]) }}
+          </template>
+          <template v-else>
+            {{ row[field.key] || '-' }}
+          </template>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="500" fixed="right">
@@ -50,6 +118,113 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 卡片视图 -->
+    <div v-else v-loading="loading" class="config-grid">
+      <el-card
+        v-for="config in filteredConfigs"
+        :key="config.folderName"
+        class="config-card"
+        shadow="hover"
+      >
+        <template #header>
+          <div class="card-header">
+            <div class="brand-info">
+              <h4>{{ config.alias }}</h4>
+              <el-tag
+                v-if="config.baseUrlRegion"
+                :type="getRegionTagType(config.baseUrlRegion)"
+                size="small"
+              >
+                {{ getRegionLabel(config.baseUrlRegion) }}
+              </el-tag>
+            </div>
+          </div>
+        </template>
+
+        <div class="card-content">
+          <!-- Logo 展示 -->
+          <div v-if="visibleFieldsMap.logoExists" class="logo-section">
+            <img
+              v-if="config.logoExists"
+              :src="`/appConfig/${config.folderName}/logo.png`"
+              alt="Logo"
+              class="logo-image"
+              @error="handleImageError"
+            />
+            <div v-else class="logo-placeholder">
+              <el-icon><Picture /></el-icon>
+              <span>暂无 Logo</span>
+            </div>
+          </div>
+
+          <!-- 配置信息 -->
+          <el-descriptions :column="1" size="small" border>
+            <el-descriptions-item
+              v-for="field in visibleFields.filter(f => f.key !== 'logoExists' && f.key !== 'alias' && f.key !== 'baseUrlRegion')"
+              :key="field.key"
+              :label="field.label"
+            >
+              <template v-if="field.key === 'createdAt'">
+                {{ formatDate(config[field.key]) }}
+              </template>
+              <template v-else>
+                {{ config[field.key] || '-' }}
+              </template>
+            </el-descriptions-item>
+          </el-descriptions>
+
+          <!-- 操作按钮 -->
+          <div class="card-actions">
+            <el-button type="primary" link @click="viewConfig(config.folderName || config.alias)">
+              查看
+            </el-button>
+            <el-button type="warning" link @click="editConfig(config.folderName || config.alias)">
+              编辑
+            </el-button>
+            <el-button type="danger" link @click="deleteConfig(config.folderName || config.alias)">
+              删除
+            </el-button>
+            <el-button type="success" link @click="viewKeystoreInfo(config.folderName || config.alias)">
+              查看密钥
+            </el-button>
+            <el-button type="info" link @click="regenerateKeystore(config.folderName || config.alias)">
+              重新生成 Keystore
+            </el-button>
+            <el-button type="primary" link @click="generateUnipush(config.folderName || config.alias)">
+              生成 unipush 云函数
+            </el-button>
+          </div>
+        </div>
+      </el-card>
+
+      <el-empty
+        v-if="!loading && filteredConfigs.length === 0"
+        description="暂无配置或未找到匹配的配置"
+      />
+    </div>
+
+    <!-- 字段配置对话框 -->
+    <el-dialog
+      v-model="showFieldConfigDialog"
+      title="配置显示字段"
+      width="600px"
+    >
+      <el-checkbox-group v-model="selectedFields">
+        <el-checkbox
+          v-for="field in allFields"
+          :key="field.key"
+          :label="field.key"
+        >
+          {{ field.label }}
+        </el-checkbox>
+      </el-checkbox-group>
+      <template #footer>
+        <el-button @click="showFieldConfigDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveFieldConfig">确定</el-button>
+        <el-button @click="resetFieldConfig">重置为默认</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 查看配置对话框 -->
     <el-dialog
@@ -250,7 +425,7 @@
             @change="handleEditRegionChange"
           >
             <el-option 
-              v-for="region in regionOptions" 
+              v-for="region in editRegionOptions" 
               :key="region.value"
               :label="region.label"
               :value="region.value"
@@ -639,13 +814,162 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document } from '@element-plus/icons-vue';
+import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document, Search, List, Grid, Setting, Picture } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 const loading = ref(false);
 const configs = ref([]);
+const viewMode = ref('list'); // 'list' 或 'card'
+const searchText = ref('');
+const filterRegion = ref('');
+const showFieldConfigDialog = ref(false);
+const selectedFields = ref([]);
+
+// 所有可用字段定义
+const allFields = [
+  { key: 'alias', label: '品牌别名', width: 150, default: true },
+  { key: 'appName', label: '应用名称', minWidth: 150, default: true },
+  { key: 'appEnName', label: '应用英文名', minWidth: 150, default: true },
+  { key: 'appDescription', label: '描述', minWidth: 200, default: true },
+  { key: 'dcAppId', label: 'DCloud App ID', minWidth: 150, default: false },
+  { key: 'packagename', label: 'Android 包名', minWidth: 180, default: false },
+  { key: 'iosAppId', label: 'iOS Bundle ID', minWidth: 180, default: false },
+  { key: 'appLinksuffix', label: 'App Link Suffix', minWidth: 150, default: false },
+  { key: 'schemes', label: 'Schemes', minWidth: 120, default: false },
+  { key: 'urltypes', label: 'URL Types', minWidth: 120, default: false },
+  { key: 'teamId', label: 'iOS Team ID', minWidth: 150, default: false },
+  { key: 'corporationId', label: '集团 ID', minWidth: 120, default: false },
+  { key: 'extAppId', label: '装修 ID', minWidth: 120, default: false },
+  { key: 'iosApplinksDomain', label: 'iOS App Links 域名', minWidth: 200, default: false },
+  { key: 'baseUrlRegion', label: '环境', width: 120, default: true },
+  { key: 'logoExists', label: 'Logo', width: 100, default: false },
+  { key: 'createdAt', label: '创建时间', width: 180, default: true }
+];
+
+// 默认显示的字段
+const defaultFields = allFields.filter(f => f.default).map(f => f.key);
+
+// 初始化选中的字段（从 localStorage 读取或使用默认值）
+const initSelectedFields = () => {
+  const saved = localStorage.getItem('configListSelectedFields');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      // 验证字段是否有效
+      const validFields = parsed.filter(f => allFields.some(af => af.key === f));
+      if (validFields.length > 0) {
+        selectedFields.value = validFields;
+        return;
+      }
+    } catch (e) {
+      console.error('Failed to parse saved fields:', e);
+    }
+  }
+  selectedFields.value = [...defaultFields];
+};
+
+initSelectedFields();
+
+// 可见字段（根据用户选择）
+const visibleFields = computed(() => {
+  return allFields.filter(f => selectedFields.value.includes(f.key));
+});
+
+// 可见字段映射（用于快速查找）
+const visibleFieldsMap = computed(() => {
+  const map = {};
+  selectedFields.value.forEach(key => {
+    map[key] = true;
+  });
+  return map;
+});
+
+// 环境选项
+const regionOptions = [
+  { label: '美国 (US)', value: 'us' },
+  { label: '东南亚 (SEA)', value: 'sea' },
+  { label: '欧洲 (EU)', value: 'eu' },
+  { label: '测试环境 (TEST)', value: 'test' }
+];
+
+// 获取环境标签类型
+const getRegionTagType = (region) => {
+  const typeMap = {
+    us: 'success',
+    sea: 'primary',
+    eu: 'warning',
+    test: 'danger'
+  };
+  return typeMap[region] || 'info';
+};
+
+// 获取环境标签文本
+const getRegionLabel = (region) => {
+  const option = regionOptions.find(r => r.value === region);
+  return option ? option.label : region;
+};
+
+// 过滤后的配置列表
+const filteredConfigs = computed(() => {
+  let result = configs.value;
+
+  // 搜索过滤
+  if (searchText.value) {
+    const search = searchText.value.toLowerCase();
+    result = result.filter(config => {
+      return (
+        (config.alias && config.alias.toLowerCase().includes(search)) ||
+        (config.appName && config.appName.toLowerCase().includes(search)) ||
+        (config.appEnName && config.appEnName.toLowerCase().includes(search)) ||
+        (config.appDescription && config.appDescription.toLowerCase().includes(search)) ||
+        (config.dcAppId && config.dcAppId.toLowerCase().includes(search)) ||
+        (config.packagename && config.packagename.toLowerCase().includes(search)) ||
+        (config.iosAppId && config.iosAppId.toLowerCase().includes(search)) ||
+        (config.baseUrlRegion && config.baseUrlRegion.toLowerCase().includes(search))
+      );
+    });
+  }
+
+  // 环境过滤
+  if (filterRegion.value) {
+    result = result.filter(config => config.baseUrlRegion === filterRegion.value);
+  }
+
+  return result;
+});
+
+// 处理搜索
+const handleSearch = () => {
+  // 搜索逻辑已在 computed 中处理
+};
+
+// 保存字段配置
+const saveFieldConfig = () => {
+  if (selectedFields.value.length === 0) {
+    ElMessage.warning('请至少选择一个字段');
+    return;
+  }
+  localStorage.setItem('configListSelectedFields', JSON.stringify(selectedFields.value));
+  showFieldConfigDialog.value = false;
+  ElMessage.success('字段配置已保存');
+};
+
+// 重置字段配置
+const resetFieldConfig = () => {
+  selectedFields.value = [...defaultFields];
+  ElMessage.info('已重置为默认字段');
+};
+
+// 处理图片加载错误
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
+  const placeholder = event.target.nextElementSibling;
+  if (placeholder) {
+    placeholder.style.display = 'flex';
+  }
+};
 const viewDialogVisible = ref(false);
 const viewingConfig = ref(null);
 const showImportDialog = ref(false);
@@ -675,8 +999,8 @@ const keystoreInfo = ref(null);
 const keystoreError = ref('');
 const keystoreLoading = ref(false);
 
-// API 地区选项
-const regionOptions = [
+// API 地区选项（用于编辑表单）
+const editRegionOptions = [
   { 
     label: '美国 (US) - https://m.us.restosuite.ai', 
     value: 'us',
@@ -1081,7 +1405,7 @@ const handleEditRegionChange = (value) => {
   }
   
   // 设置对应的 iOS App Links 域名
-  const selectedRegion = regionOptions.find(r => r.value === value);
+  const selectedRegion = editRegionOptions.find(r => r.value === value);
   if (selectedRegion && selectedRegion.applinksDomain) {
     editingConfig.value.iosApplinksDomain = selectedRegion.applinksDomain;
   }
@@ -1399,6 +1723,154 @@ defineExpose({
   font-size: 12px;
   color: #909399;
   margin-top: 5px;
+}
+
+/* 新增样式 */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.config-card {
+  transition: transform 0.2s;
+}
+
+.config-card:hover {
+  transform: translateY(-4px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-info h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.card-content {
+  padding: 10px 0;
+}
+
+.logo-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  min-height: 120px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.logo-image {
+  max-width: 100%;
+  max-height: 100px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.logo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.logo-placeholder .el-icon {
+  font-size: 32px;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+:deep(.el-descriptions__label) {
+  font-weight: 500;
+  width: 120px;
+}
+
+:deep(.el-descriptions__content) {
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .search-bar .el-input,
+  .search-bar .el-select {
+    width: 100% !important;
+  }
+
+  .view-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>
 

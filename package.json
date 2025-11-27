@@ -7,7 +7,7 @@
     "app-config": "./bin/app-config.js"
   },
   "scripts": {
-    "dev": "node bin/app-config.js serve",
+    "dev": "vite build && node bin/app-config.js serve",
     "build": "vite build",
     "prepublishOnly": "npm run build",
     "start": "node bin/app-config.js serve"
