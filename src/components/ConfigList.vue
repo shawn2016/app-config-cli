@@ -50,10 +50,12 @@
             <el-icon><Setting /></el-icon>
             配置字段
           </el-button>
-          <el-button type="success" @click="generateAppLinks">
-            <el-icon><Link /></el-icon>
-            生成 applinks
-          </el-button>
+          <template v-if="isDeveloper">
+            <el-button type="success" @click="generateAppLinks">
+              <el-icon><Link /></el-icon>
+              生成 applinks
+            </el-button>
+          </template>
         </div>
       </div>
     </div>
@@ -98,7 +100,38 @@
           <template v-else-if="field.key === 'createdAt'">
             {{ formatDate(row[field.key]) }}
           </template>
-          <template v-else-if="field.key === 'versionName' || field.key === 'androidVersionCode' || field.key === 'iosVersionCode'">
+          <template v-else-if="field.key === 'iosDownloadUrl' || field.key === 'androidDownloadUrl'">
+            <el-link
+              v-if="row[field.key]"
+              :href="row[field.key]"
+              target="_blank"
+              type="primary"
+            >
+              {{ row[field.key] }}
+            </el-link>
+            <span v-else>-</span>
+          </template>
+          <template v-else-if="field.key === 'themeColor'">
+            <div v-if="row[field.key]" style="display: flex; align-items: center; gap: 8px;">
+              <span
+                :style="{ 
+                  display: 'inline-block', 
+                  width: '20px', 
+                  height: '20px', 
+                  backgroundColor: row[field.key], 
+                  borderRadius: '4px',
+                  border: '1px solid #dcdfe6'
+                }"
+              ></span>
+              <span>{{ row[field.key] }}</span>
+            </div>
+            <span v-else>-</span>
+          </template>
+          <template v-else-if="field.key === 'isSupportEnterprise' || field.key === 'isTest' || field.key === 'isSupportHotUpdate'">
+            <el-tag v-if="row[field.key]" type="success" size="small">是</el-tag>
+            <el-tag v-else type="info" size="small">否</el-tag>
+          </template>
+          <template v-else-if="field.key === 'versionName' || field.key === 'androidVersionCode' || field.key === 'iosVersionCode' || field.key === 'versionCode'">
             <span style="font-weight: 500; color: #409eff;">{{ row[field.key] || '-' }}</span>
           </template>
           <template v-else>
@@ -109,24 +142,26 @@
       <el-table-column label="操作" width="500" fixed="right">
         <template #default="{ row }">
           <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-            <el-button type="primary" link @click="viewConfig(row.folderName || row.alias)">
-              查看
-            </el-button>
-            <el-button type="warning" link @click="editConfig(row.folderName || row.alias)">
-              编辑
-            </el-button>
-            <el-button type="danger" link @click="deleteConfig(row.folderName || row.alias)">
-              删除
-            </el-button>
-            <el-button type="success" link @click="viewKeystoreInfo(row.folderName || row.alias)">
-              查看密钥
-            </el-button>
-            <el-button type="info" link @click="regenerateKeystore(row.folderName || row.alias)">
-              重新生成 Keystore
-            </el-button>
-            <el-button type="primary" link @click="generateUnipush(row.folderName || row.alias)">
-              生成 unipush 云函数
-            </el-button>
+            <template v-if="isDeveloper">
+              <el-button type="primary" link @click="viewConfig(row.folderName || row.alias)">
+                查看
+              </el-button>
+              <el-button type="warning" link @click="editConfig(row.folderName || row.alias)">
+                编辑
+              </el-button>
+              <el-button type="danger" link @click="deleteConfig(row.folderName || row.alias)">
+                删除
+              </el-button>
+              <el-button type="success" link @click="viewKeystoreInfo(row.folderName || row.alias)">
+                查看密钥
+              </el-button>
+              <el-button type="info" link @click="regenerateKeystore(row.folderName || row.alias)">
+                重新生成 Keystore
+              </el-button>
+              <el-button type="primary" link @click="generateUnipush(row.folderName || row.alias)">
+                生成 unipush 云函数
+              </el-button>
+            </template>
             <el-button type="warning" link @click="showCloudBuildDialog(row.folderName || row.alias, row)">
               云打包
             </el-button>
@@ -184,7 +219,38 @@
               <template v-if="field.key === 'createdAt'">
                 {{ formatDate(config[field.key]) }}
               </template>
-              <template v-else-if="field.key === 'versionName' || field.key === 'androidVersionCode' || field.key === 'iosVersionCode'">
+              <template v-else-if="field.key === 'iosDownloadUrl' || field.key === 'androidDownloadUrl'">
+                <el-link
+                  v-if="config[field.key]"
+                  :href="config[field.key]"
+                  target="_blank"
+                  type="primary"
+                >
+                  {{ config[field.key] }}
+                </el-link>
+                <span v-else>-</span>
+              </template>
+              <template v-else-if="field.key === 'themeColor'">
+                <div v-if="config[field.key]" style="display: flex; align-items: center; gap: 8px;">
+                  <span
+                    :style="{ 
+                      display: 'inline-block', 
+                      width: '20px', 
+                      height: '20px', 
+                      backgroundColor: config[field.key], 
+                      borderRadius: '4px',
+                      border: '1px solid #dcdfe6'
+                    }"
+                  ></span>
+                  <span>{{ config[field.key] }}</span>
+                </div>
+                <span v-else>-</span>
+              </template>
+              <template v-else-if="field.key === 'isSupportEnterprise' || field.key === 'isTest' || field.key === 'isSupportHotUpdate'">
+                <el-tag v-if="config[field.key]" type="success" size="small">是</el-tag>
+                <el-tag v-else type="info" size="small">否</el-tag>
+              </template>
+              <template v-else-if="field.key === 'versionName' || field.key === 'androidVersionCode' || field.key === 'iosVersionCode' || field.key === 'versionCode'">
                 <span style="font-weight: 500; color: #409eff;">{{ config[field.key] || '-' }}</span>
               </template>
               <template v-else>
@@ -195,24 +261,26 @@
 
           <!-- 操作按钮 -->
           <div class="card-actions">
-            <el-button type="primary" link @click="viewConfig(config.folderName || config.alias)">
-              查看
-            </el-button>
-            <el-button type="warning" link @click="editConfig(config.folderName || config.alias)">
-              编辑
-            </el-button>
-            <el-button type="danger" link @click="deleteConfig(config.folderName || config.alias)">
-              删除
-            </el-button>
-            <el-button type="success" link @click="viewKeystoreInfo(config.folderName || config.alias)">
-              查看密钥
-            </el-button>
-            <el-button type="info" link @click="regenerateKeystore(config.folderName || config.alias)">
-              重新生成 Keystore
-            </el-button>
-            <el-button type="primary" link @click="generateUnipush(config.folderName || config.alias)">
-              生成 unipush 云函数
-            </el-button>
+            <template v-if="isDeveloper">
+              <el-button type="primary" link @click="viewConfig(config.folderName || config.alias)">
+                查看
+              </el-button>
+              <el-button type="warning" link @click="editConfig(config.folderName || config.alias)">
+                编辑
+              </el-button>
+              <el-button type="danger" link @click="deleteConfig(config.folderName || config.alias)">
+                删除
+              </el-button>
+              <el-button type="success" link @click="viewKeystoreInfo(config.folderName || config.alias)">
+                查看密钥
+              </el-button>
+              <el-button type="info" link @click="regenerateKeystore(config.folderName || config.alias)">
+                重新生成 Keystore
+              </el-button>
+              <el-button type="primary" link @click="generateUnipush(config.folderName || config.alias)">
+                生成 unipush 云函数
+              </el-button>
+            </template>
             <el-button type="warning" link @click="showCloudBuildDialog(config.folderName || config.alias, config)">
               云打包
             </el-button>
@@ -232,6 +300,10 @@
       title="配置显示字段"
       width="600px"
     >
+      <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+        <el-button size="small" @click="selectAllFields">全选</el-button>
+        <el-button size="small" @click="resetFieldConfig">恢复默认</el-button>
+      </div>
       <el-checkbox-group v-model="selectedFields">
         <el-checkbox
           v-for="field in allFields"
@@ -244,7 +316,6 @@
       <template #footer>
         <el-button @click="showFieldConfigDialog = false">取消</el-button>
         <el-button type="primary" @click="saveFieldConfig">确定</el-button>
-        <el-button @click="resetFieldConfig">重置为默认</el-button>
       </template>
     </el-dialog>
 
@@ -847,8 +918,35 @@
 
         <el-divider content-position="left">打包配置</el-divider>
 
+        <el-form-item label="Git 分支" prop="branch">
+          <el-select 
+            v-model="cloudBuildForm.branch" 
+            placeholder="请选择分支"
+            filterable
+            :loading="branchesLoading"
+            @focus="loadBranches"
+            style="width: 100%;"
+          >
+            <el-option
+              v-for="branch in branches"
+              :key="branch"
+              :label="branch"
+              :value="branch"
+            >
+              <span v-if="branch === currentBranch" style="color: #409eff; font-weight: 500;">
+                {{ branch }} (当前)
+              </span>
+              <span v-else>{{ branch }}</span>
+            </el-option>
+          </el-select>
+          <div class="form-tip">
+            <el-icon><InfoFilled /></el-icon>
+            选择分支后会自动切换分支、执行 git pull 和 pnpm i
+          </div>
+        </el-form-item>
+
         <el-form-item label="平台" prop="platform">
-          <el-radio-group v-model="cloudBuildForm.platform">
+          <el-radio-group v-model="cloudBuildForm.platform" @change="handlePlatformChange">
             <el-radio label="android">Android</el-radio>
             <el-radio label="ios">iOS</el-radio>
           </el-radio-group>
@@ -942,6 +1040,16 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document, Search, List, Grid, Setting, Picture, Loading, Link } from '@element-plus/icons-vue';
 import axios from 'axios';
 
+const props = defineProps({
+  userRole: {
+    type: String,
+    default: 'developer' // 'developer' 或 'tester'
+  }
+});
+
+const isDeveloper = computed(() => props.userRole === 'developer');
+const isTester = computed(() => props.userRole === 'tester');
+
 const loading = ref(false);
 const configs = ref([]);
 const viewMode = ref('list'); // 'list' 或 'card'
@@ -959,6 +1067,7 @@ const allFields = [
   { key: 'appEnName', label: '应用英文名', minWidth: 150, default: true },
   { key: 'appDescription', label: '描述', minWidth: 200, default: true },
   { key: 'versionName', label: '版本号', width: 120, default: true },
+  { key: 'versionCode', label: '版本代码', width: 120, default: false },
   { key: 'androidVersionCode', label: 'Android 构建号', width: 140, default: true },
   { key: 'iosVersionCode', label: 'iOS 构建号', width: 120, default: true },
   { key: 'dcAppId', label: 'DCloud App ID', minWidth: 150, default: true },
@@ -971,6 +1080,15 @@ const allFields = [
   { key: 'corporationId', label: '集团 ID', minWidth: 120, default: false },
   { key: 'extAppId', label: '装修 ID', minWidth: 120, default: false },
   { key: 'iosApplinksDomain', label: 'iOS App Links 域名', minWidth: 200, default: false },
+  { key: 'locale', label: '默认语言', width: 120, default: false },
+  { key: 'themeColor', label: '主题颜色', width: 120, default: false },
+  { key: 'iosDownloadUrl', label: 'iOS 下载链接', minWidth: 250, default: false },
+  { key: 'androidDownloadUrl', label: 'Android 下载链接', minWidth: 300, default: false },
+  { key: 'reviewAccount', label: '审核账号', minWidth: 150, default: false },
+  { key: 'reviewPassword', label: '审核密码', minWidth: 120, default: false },
+  { key: 'isSupportEnterprise', label: '支持企业包', width: 120, default: false },
+  { key: 'isTest', label: '测试环境', width: 100, default: false },
+  { key: 'isSupportHotUpdate', label: '支持热更新', width: 120, default: false },
   { key: 'createdAt', label: '创建时间', width: 180, default: true }
 ];
 
@@ -1082,10 +1200,16 @@ const saveFieldConfig = () => {
   ElMessage.success('字段配置已保存');
 };
 
+// 全选字段
+const selectAllFields = () => {
+  selectedFields.value = allFields.map(f => f.key);
+  ElMessage.info('已全选所有字段');
+};
+
 // 重置字段配置
 const resetFieldConfig = () => {
   selectedFields.value = [...defaultFields];
-  ElMessage.info('已重置为默认字段');
+  ElMessage.info('已恢复为默认字段');
 };
 
 // 处理图片加载错误
@@ -1129,13 +1253,17 @@ const cloudBuildForm = ref({
   androidVersionCode: '',
   iosVersionCode: '',
   nextAndroidVersionCode: null,
-  nextIosVersionCode: null
+  nextIosVersionCode: null,
+  branch: ''
 });
 const cloudBuildFormRef = ref(null);
 const cloudBuildLoading = ref(false);
 const cloudBuildProgressVisible = ref(false);
 const cloudBuildOutput = ref([]);
 const cloudBuildAbortController = ref(null);
+const branches = ref([]);
+const currentBranch = ref('');
+const branchesLoading = ref(false);
 const cloudBuildRules = {
   platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
   operation: [{ required: true, message: '请选择操作类型', trigger: 'change' }],
@@ -1412,6 +1540,54 @@ const generateAppLinks = async () => {
   }
 };
 
+// 加载分支列表
+const loadBranches = async () => {
+  if (branches.value.length > 0) return; // 已经加载过，不再重复加载
+  
+  try {
+    branchesLoading.value = true;
+    const response = await axios.get('/api/git/branches');
+    if (response.data && response.data.success) {
+      branches.value = response.data.branches || [];
+      currentBranch.value = response.data.currentBranch || '';
+    }
+  } catch (error) {
+    console.error('获取分支列表失败:', error);
+    ElMessage.warning('获取分支列表失败: ' + (error.response?.data?.error || error.message));
+  } finally {
+    branchesLoading.value = false;
+  }
+};
+
+// 处理平台变化
+const handlePlatformChange = () => {
+  // 平台变化时，更新默认分支
+  const defaultBranch = getDefaultBranch(
+    cloudBuildForm.value.alias,
+    cloudBuildForm.value.platform,
+    cloudBuildForm.value.environment
+  );
+  if (defaultBranch) {
+    cloudBuildForm.value.branch = defaultBranch;
+  } else if (currentBranch.value) {
+    cloudBuildForm.value.branch = currentBranch.value;
+  }
+};
+
+// 获取默认分支（从 localStorage）
+const getDefaultBranch = (alias, platform, environment) => {
+  const key = `defaultBranch_${alias}_${platform}_${environment}`;
+  return localStorage.getItem(key) || '';
+};
+
+// 保存默认分支（到 localStorage）
+const saveDefaultBranch = (alias, platform, environment, branch) => {
+  if (branch) {
+    const key = `defaultBranch_${alias}_${platform}_${environment}`;
+    localStorage.setItem(key, branch);
+  }
+};
+
 // 显示云打包对话框
 const showCloudBuildDialog = async (alias, config) => {
   // 优先使用传入的 config 参数中的版本信息
@@ -1438,18 +1614,30 @@ const showCloudBuildDialog = async (alias, config) => {
   const currentAndroid = parseInt(androidVersionCode) || 0;
   const currentIos = parseInt(iosVersionCode) || 0;
   
+  // 确定环境
+  const environment = config?.baseUrlRegion === 'test' ? 'test' : 'production';
+  const platform = 'android'; // 默认平台
+  
   cloudBuildForm.value = {
     alias: alias,
-    platform: 'android',
-    environment: config?.baseUrlRegion === 'test' ? 'test' : 'production',
+    platform: platform,
+    environment: environment,
     operation: 'wgt', // 默认选中 wgt
     userVersionDesc: '',
     versionName: versionName,
     androidVersionCode: androidVersionCode,
     iosVersionCode: iosVersionCode,
     nextAndroidVersionCode: currentAndroid + 1,
-    nextIosVersionCode: currentIos + 1
+    nextIosVersionCode: currentIos + 1,
+    branch: ''
   };
+  
+  // 加载分支列表
+  await loadBranches();
+  
+  // 获取默认分支（在分支列表加载后）
+  const defaultBranch = getDefaultBranch(alias, platform, environment);
+  cloudBuildForm.value.branch = defaultBranch || currentBranch.value || '';
   
   cloudBuildDialogVisible.value = true;
 };
@@ -1467,7 +1655,8 @@ const closeCloudBuildDialog = () => {
     androidVersionCode: '',
     iosVersionCode: '',
     nextAndroidVersionCode: null,
-    nextIosVersionCode: null
+    nextIosVersionCode: null,
+    branch: ''
   };
   if (cloudBuildFormRef.value) {
     cloudBuildFormRef.value.resetFields();
@@ -1512,6 +1701,16 @@ const confirmCloudBuild = async () => {
     // 创建 AbortController 用于中断请求
     cloudBuildAbortController.value = new AbortController();
     
+    // 保存默认分支
+    if (cloudBuildForm.value.branch) {
+      saveDefaultBranch(
+        cloudBuildForm.value.alias,
+        cloudBuildForm.value.platform,
+        cloudBuildForm.value.environment,
+        cloudBuildForm.value.branch
+      );
+    }
+
     // 使用 fetch 接收流式响应
     const response = await fetch(`/api/configs/${cloudBuildForm.value.alias}/cloud-build`, {
       method: 'POST',
@@ -1524,7 +1723,8 @@ const confirmCloudBuild = async () => {
         userVersionDesc: cloudBuildForm.value.userVersionDesc || '',
         versionName: cloudBuildForm.value.versionName,
         androidVersionCode: cloudBuildForm.value.platform === 'android' ? targetVersionCode : undefined,
-        iosVersionCode: cloudBuildForm.value.platform === 'ios' ? targetVersionCode : undefined
+        iosVersionCode: cloudBuildForm.value.platform === 'ios' ? targetVersionCode : undefined,
+        branch: cloudBuildForm.value.branch || undefined
       }),
       signal: cloudBuildAbortController.value.signal
     });
