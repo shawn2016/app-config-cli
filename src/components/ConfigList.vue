@@ -165,6 +165,9 @@
             <el-button type="warning" link @click="showCloudBuildDialog(row.folderName || row.alias, row)">
               云打包
             </el-button>
+            <el-button type="success" link @click="showConvertAABDialog(row.folderName || row.alias, row)">
+              aab转apk
+            </el-button>
           </div>
         </template>
       </el-table-column>
@@ -280,6 +283,9 @@
             </template>
             <el-button type="warning" link @click="showCloudBuildDialog(config.folderName || config.alias, config)">
               云打包
+            </el-button>
+            <el-button type="success" link @click="showConvertAABDialog(config.folderName || config.alias, config)">
+              aab转apk
             </el-button>
           </div>
         </div>
@@ -1136,6 +1142,67 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- AAB 转 APK 对话框 -->
+    <el-dialog
+      v-model="convertAABDialogVisible"
+      title="AAB 转 APK"
+      width="600px"
+      :before-close="closeConvertAABDialog"
+    >
+      <el-form
+        ref="convertAABFormRef"
+        :model="convertAABForm"
+        label-width="120px"
+      >
+        <el-form-item label="品牌别名">
+          <el-input v-model="convertAABForm.alias" readonly disabled />
+        </el-form-item>
+
+        <el-form-item label="选择 AAB 文件" required>
+          <el-upload
+            ref="aabUploadRef"
+            :auto-upload="false"
+            :on-change="handleAABFileChange"
+            :on-remove="handleAABFileRemove"
+            :limit="1"
+            accept=".aab"
+            :show-file-list="true"
+          >
+            <template #trigger>
+              <el-button type="primary">
+                <el-icon><Upload /></el-icon>
+                选择 AAB 文件
+              </el-button>
+            </template>
+          </el-upload>
+          <div class="form-tip" style="margin-top: 8px;">
+            <el-icon><InfoFilled /></el-icon>
+            请选择要转换的 AAB 文件。转换需要使用品牌配置中的 keystore 文件进行签名。
+          </div>
+        </el-form-item>
+
+        <el-alert
+          v-if="convertAABError"
+          :title="convertAABError"
+          type="error"
+          :closable="false"
+          style="margin-bottom: 15px;"
+        />
+      </el-form>
+
+      <template #footer>
+        <el-button @click="closeConvertAABDialog">取消</el-button>
+        <el-button 
+          type="primary" 
+          :loading="convertAABLoading" 
+          :disabled="!convertAABForm.aabFile"
+          @click="confirmConvertAAB"
+        >
+          开始转换
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -1376,6 +1443,15 @@ const branches = ref([]);
 const currentBranch = ref('');
 const branchesLoading = ref(false);
 const cloudBuildRules = {};
+const convertAABDialogVisible = ref(false);
+const convertAABForm = ref({
+  alias: '',
+  aabFile: null
+});
+const convertAABFormRef = ref(null);
+const convertAABLoading = ref(false);
+const convertAABError = ref('');
+const aabUploadRef = ref(null);
 
 // API 地区选项（用于编辑表单）
 const editRegionOptions = [
@@ -2395,6 +2471,120 @@ const copyToClipboard = async (text) => {
 onMounted(() => {
   loadConfigs();
 });
+
+// 显示 AAB 转 APK 对话框
+const showConvertAABDialog = (alias, config) => {
+  convertAABForm.value = {
+    alias: alias,
+    aabFile: null
+  };
+  convertAABError.value = '';
+  convertAABDialogVisible.value = true;
+  if (aabUploadRef.value) {
+    aabUploadRef.value.clearFiles();
+  }
+};
+
+// 关闭 AAB 转 APK 对话框
+const closeConvertAABDialog = () => {
+  convertAABDialogVisible.value = false;
+  convertAABForm.value = {
+    alias: '',
+    aabFile: null
+  };
+  convertAABError.value = '';
+  if (aabUploadRef.value) {
+    aabUploadRef.value.clearFiles();
+  }
+};
+
+// 处理 AAB 文件选择
+const handleAABFileChange = (file) => {
+  if (!file.raw.name.toLowerCase().endsWith('.aab')) {
+    ElMessage.error('文件必须是 .aab 格式');
+    aabUploadRef.value?.clearFiles();
+    convertAABForm.value.aabFile = null;
+    return;
+  }
+  convertAABForm.value.aabFile = file.raw;
+  convertAABError.value = '';
+};
+
+// 处理 AAB 文件移除
+const handleAABFileRemove = () => {
+  convertAABForm.value.aabFile = null;
+  convertAABError.value = '';
+};
+
+// 确认转换 AAB 到 APK
+const confirmConvertAAB = async () => {
+  if (!convertAABForm.value.aabFile) {
+    ElMessage.warning('请选择 AAB 文件');
+    return;
+  }
+
+  try {
+    convertAABLoading.value = true;
+    convertAABError.value = '';
+
+    const formData = new FormData();
+    formData.append('aab', convertAABForm.value.aabFile);
+
+    const response = await axios.post(
+      `/api/configs/${convertAABForm.value.alias}/convert-aab-to-apk`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+
+    if (response.data && response.data.success) {
+      ElMessage.success(`AAB 转 APK 成功！文件大小: ${response.data.apkSizeMB} MB`);
+      
+      // 如果返回了下载链接，自动打开下载
+      if (response.data.downloadUrl && response.data.apkFileName) {
+        // 创建下载链接并触发下载
+        const link = document.createElement('a');
+        link.href = response.data.downloadUrl;
+        link.download = response.data.apkFileName;
+        document.body.appendChild(link);
+        link.click();
+        
+        // 等待下载完成后删除服务器上的文件
+        // 使用 setTimeout 延迟删除，确保下载已经开始
+        setTimeout(async () => {
+          try {
+            // 删除服务器上的 APK 文件
+            await axios.delete(`/api/downloads/${encodeURIComponent(response.data.apkFileName)}`);
+            console.log('APK 文件已从服务器删除');
+          } catch (deleteError) {
+            console.warn('删除服务器上的 APK 文件失败:', deleteError);
+            // 不显示错误给用户，因为文件已经下载到本地了
+          }
+        }, 2000); // 延迟 2 秒后删除
+        
+        document.body.removeChild(link);
+        ElMessage.info('正在下载 APK 文件...');
+      }
+      
+      closeConvertAABDialog();
+    } else {
+      convertAABError.value = response.data?.error || '转换失败';
+      ElMessage.error(convertAABError.value);
+    }
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.message || '转换失败';
+    convertAABError.value = errorMsg;
+    ElMessage.error('转换失败: ' + errorMsg);
+    if (error.response?.data?.details) {
+      console.error('转换详情:', error.response.data.details);
+    }
+  } finally {
+    convertAABLoading.value = false;
+  }
+};
 
 // 暴露方法供父组件调用
 defineExpose({
