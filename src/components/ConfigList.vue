@@ -165,7 +165,12 @@
             <el-button type="warning" link @click="showCloudBuildDialog(row.folderName || row.alias, row)">
               云打包
             </el-button>
-            <el-button type="success" link @click="showConvertAABDialog(row.folderName || row.alias, row)">
+            <el-button 
+              v-if="row.packagename" 
+              type="success" 
+              link 
+              @click="showConvertAABDialog(row.folderName || row.alias, row)"
+            >
               aab转apk
             </el-button>
           </div>
@@ -284,7 +289,12 @@
             <el-button type="warning" link @click="showCloudBuildDialog(config.folderName || config.alias, config)">
               云打包
             </el-button>
-            <el-button type="success" link @click="showConvertAABDialog(config.folderName || config.alias, config)">
+            <el-button 
+              v-if="config.packagename" 
+              type="success" 
+              link 
+              @click="showConvertAABDialog(config.folderName || config.alias, config)"
+            >
               aab转apk
             </el-button>
           </div>

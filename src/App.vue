@@ -6,6 +6,10 @@
         <span style="font-size: 14px; font-weight: normal; margin-left: 8px; opacity: 0.8;">（{{ appVersion }}）</span>
       </h1>
       <div class="user-info">
+        <el-button type="primary" @click="showUploadPGYERDialogHandler" style="margin-right: 10px;">
+          <el-icon><Upload /></el-icon>
+          上传蒲公英
+        </el-button>
         <el-tag :type="userRole === 'developer' ? 'success' : 'info'">
           {{ userRole === 'developer' ? '开发人员' : '测试人员' }}
         </el-tag>
@@ -74,12 +78,135 @@
         <el-button type="primary" @click="confirmRole" size="large" style="width: 100%;">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 上传蒲公英对话框 -->
+    <el-dialog
+      v-model="showUploadPGYERDialog"
+      title="上传到蒲公英"
+      width="600px"
+      :before-close="closeUploadPGYERDialog"
+    >
+      <el-form
+        ref="uploadPGYERFormRef"
+        :model="uploadPGYERForm"
+        label-width="120px"
+      >
+        <el-form-item label="选择文件" required>
+          <el-upload
+            ref="pgyerUploadRef"
+            :auto-upload="false"
+            :on-change="handlePGYERFileChange"
+            :on-remove="handlePGYERFileRemove"
+            :limit="1"
+            accept=".apk,.ipa,.aab"
+            :show-file-list="true"
+          >
+            <template #trigger>
+              <el-button type="primary">
+                <el-icon><Upload /></el-icon>
+                选择 APK/IPA/AAB 文件
+              </el-button>
+            </template>
+          </el-upload>
+          <div class="form-tip" style="margin-top: 8px;">
+            <el-icon><InfoFilled /></el-icon>
+            支持上传 APK、IPA 或 AAB 文件。AAB 文件将自动转换为 APK 后上传
+          </div>
+        </el-form-item>
+
+        <el-form-item 
+          v-if="uploadPGYERForm.isAAB"
+          label="选择品牌"
+          required
+        >
+          <el-select
+            v-model="uploadPGYERForm.brandAlias"
+            placeholder="请选择品牌（用于 AAB 转 APK）"
+            filterable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="config in brandConfigs"
+              :key="config.alias"
+              :label="`${config.appName || config.alias} (${config.alias})`"
+              :value="config.alias"
+            />
+          </el-select>
+          <div class="form-tip" style="margin-top: 8px;">
+            <el-icon><InfoFilled /></el-icon>
+            AAB 转 APK 需要使用品牌配置中的 keystore 文件进行签名
+          </div>
+        </el-form-item>
+
+        <el-form-item label="安装方式">
+          <el-radio-group v-model="uploadPGYERForm.installType">
+            <el-radio :label="1">公开安装</el-radio>
+            <el-radio :label="2">密码安装</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item 
+          v-if="uploadPGYERForm.installType === 2"
+          label="安装密码"
+          prop="password"
+        >
+          <el-input 
+            v-model="uploadPGYERForm.password" 
+            type="password"
+            placeholder="请输入安装密码"
+            show-password
+          />
+        </el-form-item>
+
+        <el-form-item label="更新说明">
+          <el-input
+            v-model="uploadPGYERForm.updateDescription"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入版本更新说明（可选）"
+          />
+        </el-form-item>
+
+        <el-form-item label="API Key">
+          <el-input
+            v-model="uploadPGYERForm.apiKey"
+            placeholder="留空使用默认 API Key（可选）"
+            clearable
+          />
+          <div class="form-tip" style="margin-top: 8px;">
+            <el-icon><InfoFilled /></el-icon>
+            可自定义蒲公英 API Key，留空则使用默认配置
+          </div>
+        </el-form-item>
+
+        <el-alert
+          v-if="uploadPGYERError"
+          :title="uploadPGYERError"
+          type="error"
+          :closable="false"
+          style="margin-bottom: 15px;"
+        />
+      </el-form>
+
+      <template #footer>
+        <el-button @click="closeUploadPGYERDialog">取消</el-button>
+        <el-button 
+          type="primary" 
+          :loading="uploadPGYERLoading" 
+          :disabled="!uploadPGYERForm.file"
+          @click="confirmUploadPGYER"
+        >
+          开始上传
+        </el-button>
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue';
-import { User, Monitor, Check } from '@element-plus/icons-vue';
+import { User, Monitor, Check, Upload, InfoFilled } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
 import CreateConfig from './components/CreateConfig.vue';
 import ConfigList from './components/ConfigList.vue';
 import axios from 'axios';
@@ -90,6 +217,21 @@ const userRole = ref('developer'); // 'developer' 或 'tester'
 const showRoleDialog = ref(false);
 const selectedRole = ref('developer');
 const appVersion = ref('1.0.7'); // 默认版本号
+const showUploadPGYERDialog = ref(false);
+const uploadPGYERForm = ref({
+  file: null,
+  isAAB: false,
+  brandAlias: '',
+  installType: 1,
+  password: '',
+  updateDescription: '',
+  apiKey: ''
+});
+const uploadPGYERFormRef = ref(null);
+const uploadPGYERLoading = ref(false);
+const uploadPGYERError = ref('');
+const pgyerUploadRef = ref(null);
+const brandConfigs = ref([]);
 
 const handleTabChange = (name) => {
   // 切换标签页时的处理
@@ -149,6 +291,148 @@ const loadAppVersion = async () => {
     }
   } catch (error) {
     console.warn('获取版本号失败，使用默认版本号:', error);
+  }
+};
+
+// 加载品牌配置列表
+const loadBrandConfigs = async () => {
+  try {
+    const response = await axios.get('/api/configs');
+    if (response.data && Array.isArray(response.data)) {
+      // 只显示有 packagename 的品牌（Android 品牌）
+      brandConfigs.value = response.data.filter(config => config.packagename);
+    }
+  } catch (error) {
+    console.error('加载品牌配置失败:', error);
+  }
+};
+
+// 显示上传蒲公英对话框
+const showUploadPGYERDialogHandler = async () => {
+  uploadPGYERForm.value = {
+    file: null,
+    isAAB: false,
+    brandAlias: '',
+    installType: 1,
+    password: '',
+    updateDescription: '',
+    apiKey: ''
+  };
+  uploadPGYERError.value = '';
+  showUploadPGYERDialog.value = true;
+  if (pgyerUploadRef.value) {
+    pgyerUploadRef.value.clearFiles();
+  }
+  // 加载品牌配置列表
+  await loadBrandConfigs();
+};
+
+// 关闭上传蒲公英对话框
+const closeUploadPGYERDialog = () => {
+  showUploadPGYERDialog.value = false;
+  uploadPGYERForm.value = {
+    file: null,
+    isAAB: false,
+    brandAlias: '',
+    installType: 1,
+    password: '',
+    updateDescription: '',
+    apiKey: ''
+  };
+  uploadPGYERError.value = '';
+  if (pgyerUploadRef.value) {
+    pgyerUploadRef.value.clearFiles();
+  }
+};
+
+// 处理文件选择
+const handlePGYERFileChange = (file) => {
+  const fileName = file.raw.name.toLowerCase();
+  if (!fileName.endsWith('.apk') && !fileName.endsWith('.ipa') && !fileName.endsWith('.aab')) {
+    ElMessage.error('文件必须是 .apk、.ipa 或 .aab 格式');
+    pgyerUploadRef.value?.clearFiles();
+    uploadPGYERForm.value.file = null;
+    uploadPGYERForm.value.isAAB = false;
+    return;
+  }
+  uploadPGYERForm.value.file = file.raw;
+  uploadPGYERForm.value.isAAB = fileName.endsWith('.aab');
+  if (!uploadPGYERForm.value.isAAB) {
+    uploadPGYERForm.value.brandAlias = '';
+  }
+  uploadPGYERError.value = '';
+};
+
+// 处理文件移除
+const handlePGYERFileRemove = () => {
+  uploadPGYERForm.value.file = null;
+  uploadPGYERForm.value.isAAB = false;
+  uploadPGYERForm.value.brandAlias = '';
+  uploadPGYERError.value = '';
+};
+
+// 确认上传到蒲公英
+const confirmUploadPGYER = async () => {
+  if (!uploadPGYERForm.value.file) {
+    ElMessage.warning('请选择要上传的文件');
+    return;
+  }
+
+  if (uploadPGYERForm.value.isAAB && !uploadPGYERForm.value.brandAlias) {
+    ElMessage.warning('AAB 文件需要选择品牌配置');
+    return;
+  }
+
+  if (uploadPGYERForm.value.installType === 2 && !uploadPGYERForm.value.password) {
+    ElMessage.warning('密码安装方式需要设置安装密码');
+    return;
+  }
+
+  try {
+    uploadPGYERLoading.value = true;
+    uploadPGYERError.value = '';
+
+    const formData = new FormData();
+    formData.append('file', uploadPGYERForm.value.file);
+    formData.append('installType', uploadPGYERForm.value.installType);
+    if (uploadPGYERForm.value.password) {
+      formData.append('password', uploadPGYERForm.value.password);
+    }
+    if (uploadPGYERForm.value.updateDescription) {
+      formData.append('updateDescription', uploadPGYERForm.value.updateDescription);
+    }
+    if (uploadPGYERForm.value.apiKey && uploadPGYERForm.value.apiKey.trim()) {
+      formData.append('apiKey', uploadPGYERForm.value.apiKey.trim());
+    }
+    if (uploadPGYERForm.value.isAAB && uploadPGYERForm.value.brandAlias) {
+      formData.append('brandAlias', uploadPGYERForm.value.brandAlias);
+    }
+
+    const response = await axios.post('/api/upload-pgyer', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    if (response.data && response.data.success) {
+      ElMessage.success('上传到蒲公英成功！');
+      if (response.data.downloadUrl) {
+        ElMessage.info(`下载链接: ${response.data.downloadUrl}`);
+      }
+      if (response.data.qrCodeUrl) {
+        ElMessage.info(`二维码链接: ${response.data.qrCodeUrl}`);
+      }
+      closeUploadPGYERDialog();
+    } else {
+      uploadPGYERError.value = response.data?.error || '上传失败';
+      ElMessage.error('上传失败: ' + uploadPGYERError.value);
+    }
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.message || '上传失败';
+    uploadPGYERError.value = errorMsg;
+    ElMessage.error('上传失败: ' + errorMsg);
+  } finally {
+    uploadPGYERLoading.value = false;
   }
 };
 
