@@ -92,9 +92,39 @@
       class="config-form"
     >
       <!-- 步骤 1: 基础信息 -->
-      <div v-show="currentStep === 0" class="step-content">
-        <h3>基础信息</h3>
-        <el-form-item label="品牌别名" prop="alias">
+      <div v-show="currentStep === 0" class="step-content step-content-with-nav">
+        <!-- 左侧导航菜单 -->
+        <div class="config-nav-menu" :class="{ 'nav-menu-collapsed': navMenuCollapsed }">
+          <div class="nav-menu-header">
+            <div class="nav-menu-title" v-if="!navMenuCollapsed">配置导航</div>
+            <el-button
+              circle
+              size="small"
+              @click="navMenuCollapsed = !navMenuCollapsed"
+              class="nav-menu-toggle"
+            >
+              <el-icon><ArrowRight v-if="navMenuCollapsed" /><ArrowLeft v-else /></el-icon>
+            </el-button>
+          </div>
+          <el-menu
+            v-if="!navMenuCollapsed"
+            :default-active="activeNavItem"
+            class="nav-menu"
+            @select="handleNavSelect"
+          >
+            <el-menu-item index="logo-config">
+              <span>Logo 配置</span>
+            </el-menu-item>
+            <el-menu-item index="package-config">
+              <span>包名配置</span>
+            </el-menu-item>
+          </el-menu>
+        </div>
+        
+        <div class="config-content-wrapper">
+          <h3>基础信息</h3>
+          
+          <el-form-item label="品牌别名" prop="alias">
           <el-input
             v-model="formData.alias"
             placeholder="请输入品牌别名（将作为文件夹名）"
@@ -163,100 +193,111 @@
             </el-link>
           </div>
         </el-form-item>
+        
+          <el-collapse v-model="activeCollapseItemsStep1" class="config-collapse">
+            <el-collapse-item title="Logo 配置" name="logo-config" id="logo-config">
+              <template #title>
+                <span class="collapse-title">Logo 配置</span>
+              </template>
+              <el-form-item label="应用 Logo">
+                <div style="display: flex; align-items: flex-start; gap: 20px;">
+                  <div v-if="logoPreview" style="position: relative; display: inline-block;">
+                    <img 
+                      :src="logoPreview" 
+                      alt="Logo 预览" 
+                      style="width: 102px; height: 102px; border: 1px solid #dcdfe6; border-radius: 8px; object-fit: contain; background: #f5f7fa;"
+                    />
+                    <el-button
+                      type="danger"
+                      :icon="Delete"
+                      circle
+                      size="small"
+                      style="position: absolute; top: -8px; right: -8px;"
+                      @click="deleteLogoPreview"
+                      title="删除 Logo"
+                    />
+                  </div>
+                  <div v-else style="width: 102px; height: 102px; border: 1px dashed #dcdfe6; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fafafa; color: #909399; font-size: 12px; text-align: center; padding: 10px;">
+                    暂无 Logo
+                  </div>
+                  <div style="flex: 1;">
+                    <el-upload
+                      ref="logoUploadRef"
+                      :auto-upload="false"
+                      :on-change="handleLogoChange"
+                      :on-remove="handleLogoRemove"
+                      :limit="1"
+                      accept="image/png"
+                      :show-file-list="false"
+                    >
+                      <template #trigger>
+                        <el-button type="primary">
+                          <el-icon><Upload /></el-icon>
+                          选择 Logo
+                        </el-button>
+                      </template>
+                    </el-upload>
+                    <div class="form-tip" style="margin-top: 8px;">
+                      <el-icon><InfoFilled /></el-icon>
+                      Logo 要求：PNG 格式，尺寸 1024x1024 像素。<strong style="color: #e6a23c;">打包时必填项</strong>
+                    </div>
+                  </div>
+                </div>
+              </el-form-item>
+            </el-collapse-item>
 
-        <el-divider content-position="left">Logo 配置</el-divider>
-        <el-form-item label="应用 Logo">
-          <div style="display: flex; align-items: flex-start; gap: 20px;">
-            <div v-if="logoPreview" style="position: relative; display: inline-block;">
-              <img 
-                :src="logoPreview" 
-                alt="Logo 预览" 
-                style="width: 102px; height: 102px; border: 1px solid #dcdfe6; border-radius: 8px; object-fit: contain; background: #f5f7fa;"
-              />
-              <el-button
-                type="danger"
-                :icon="Delete"
-                circle
-                size="small"
-                style="position: absolute; top: -8px; right: -8px;"
-                @click="deleteLogoPreview"
-                title="删除 Logo"
-              />
-            </div>
-            <div v-else style="width: 102px; height: 102px; border: 1px dashed #dcdfe6; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fafafa; color: #909399; font-size: 12px; text-align: center; padding: 10px;">
-              暂无 Logo
-            </div>
-            <div style="flex: 1;">
-              <el-upload
-                ref="logoUploadRef"
-                :auto-upload="false"
-                :on-change="handleLogoChange"
-                :on-remove="handleLogoRemove"
-                :limit="1"
-                accept="image/png"
-                :show-file-list="false"
-              >
-                <template #trigger>
-                  <el-button type="primary">
-                    <el-icon><Upload /></el-icon>
-                    选择 Logo
-                  </el-button>
-                </template>
-              </el-upload>
-              <div class="form-tip" style="margin-top: 8px;">
-                <el-icon><InfoFilled /></el-icon>
-                Logo 要求：PNG 格式，尺寸 1024x1024 像素。<strong style="color: #e6a23c;">打包时必填项</strong>
-              </div>
-            </div>
-          </div>
-        </el-form-item>
+            <el-collapse-item title="包名配置" name="package-config" id="package-config">
+              <template #title>
+                <span class="collapse-title">包名配置</span>
+              </template>
+              <el-form-item label="Android 包名" prop="packagename">
+                <el-input v-model="formData.packagename" placeholder="如：ai.restosuite.mollytea">
+                  <template #append>
+                    <el-button @click="copyToClipboard(formData.packagename)">
+                      <el-icon><DocumentCopy /></el-icon>
+                      复制
+                    </el-button>
+                  </template>
+                </el-input>
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  Android 包名，格式：ai.restosuite.别名。初始根据别名自动生成，生成后可手动修改。<strong style="color: #e6a23c;">打包时必填项</strong>
+                  <el-link
+                    href="https://cinyja0w5wn.feishu.cn/wiki/BF9fwROcCiTW2tkaTdmcTK5xnyg"
+                    target="_blank"
+                    type="primary"
+                    style="margin: 0 4px"
+                  >
+                    开发参考文档
+                  </el-link>
+                </div>
+              </el-form-item>
 
-        <el-divider content-position="left">包名配置</el-divider>
-        <el-form-item label="Android 包名" prop="packagename">
-          <el-input v-model="formData.packagename" placeholder="如：ai.restosuite.mollytea">
-            <template #append>
-              <el-button @click="copyToClipboard(formData.packagename)">
-                <el-icon><DocumentCopy /></el-icon>
-                复制
-              </el-button>
-            </template>
-          </el-input>
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            Android 包名，格式：ai.restosuite.别名。初始根据别名自动生成，生成后可手动修改。<strong style="color: #e6a23c;">打包时必填项</strong>
-            <el-link
-              href="https://cinyja0w5wn.feishu.cn/wiki/BF9fwROcCiTW2tkaTdmcTK5xnyg"
-              target="_blank"
-              type="primary"
-              style="margin: 0 4px"
-            >
-              开发参考文档
-            </el-link>
-          </div>
-        </el-form-item>
-
-        <el-form-item label="iOS Bundle ID" prop="iosAppId">
-          <el-input v-model="formData.iosAppId" placeholder="如：ai.restosuite.mollytea">
-            <template #append>
-              <el-button @click="copyToClipboard(formData.iosAppId)">
-                <el-icon><DocumentCopy /></el-icon>
-                复制
-              </el-button>
-            </template>
-          </el-input>
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            iOS Bundle ID，格式：ai.restosuite.别名。初始根据别名自动生成，生成后可手动修改。<strong style="color: #e6a23c;">打包时必填项</strong>
-            <el-link
-              href="https://cinyja0w5wn.feishu.cn/wiki/Ek5UwfzkgiK4nbkc2MlcSqLMnGh"
-              target="_blank"
-              type="primary"
-              style="margin: 0 4px"
-            >
-              开发参考文档
-            </el-link>
-          </div>
-        </el-form-item>
+              <el-form-item label="iOS Bundle ID" prop="iosAppId">
+                <el-input v-model="formData.iosAppId" placeholder="如：ai.restosuite.mollytea">
+                  <template #append>
+                    <el-button @click="copyToClipboard(formData.iosAppId)">
+                      <el-icon><DocumentCopy /></el-icon>
+                      复制
+                    </el-button>
+                  </template>
+                </el-input>
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  iOS Bundle ID，格式：ai.restosuite.别名。初始根据别名自动生成，生成后可手动修改。<strong style="color: #e6a23c;">打包时必填项</strong>
+                  <el-link
+                    href="https://cinyja0w5wn.feishu.cn/wiki/Ek5UwfzkgiK4nbkc2MlcSqLMnGh"
+                    target="_blank"
+                    type="primary"
+                    style="margin: 0 4px"
+                  >
+                    开发参考文档
+                  </el-link>
+                </div>
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
       </div>
 
       <!-- 步骤 2: 环境配置 -->
@@ -296,339 +337,468 @@
       </div>
 
       <!-- 步骤 3: 其他配置 -->
-      <div v-show="currentStep === 2" class="step-content">
-        <h3>其他配置</h3>
+      <div v-show="currentStep === 2" class="step-content step-content-with-nav">
+        <!-- 左侧导航菜单 -->
+        <div class="config-nav-menu" :class="{ 'nav-menu-collapsed': navMenuCollapsed }">
+          <div class="nav-menu-header">
+            <div class="nav-menu-title" v-if="!navMenuCollapsed">配置导航</div>
+            <el-button
+              circle
+              size="small"
+              @click="navMenuCollapsed = !navMenuCollapsed"
+              class="nav-menu-toggle"
+            >
+              <el-icon><ArrowRight v-if="navMenuCollapsed" /><ArrowLeft v-else /></el-icon>
+            </el-button>
+          </div>
+          <el-menu
+            v-if="!navMenuCollapsed"
+            :default-active="activeNavItem"
+            class="nav-menu"
+            @select="handleNavSelect"
+          >
+            <el-menu-item index="version-config">
+              <span>版本配置</span>
+            </el-menu-item>
+            <el-menu-item index="basic-config">
+              <span>基础配置</span>
+            </el-menu-item>
+            <el-menu-item index="enterprise-config">
+              <span>企业配置</span>
+            </el-menu-item>
+            <el-menu-item index="appstore-config">
+              <span>App Store 配置</span>
+            </el-menu-item>
+            <el-menu-item index="certificate-config">
+              <span>证书配置</span>
+            </el-menu-item>
+            <el-menu-item index="feature-switch">
+              <span>功能开关</span>
+            </el-menu-item>
+            <el-menu-item index="other-files">
+              <span>其他文件</span>
+            </el-menu-item>
+          </el-menu>
+        </div>
         
-        <el-divider content-position="left">版本配置</el-divider>
-        <el-form-item label="版本号" prop="versionName">
-          <el-input v-model="formData.versionName" placeholder="1.0.0" />
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            版本名称，如 1.0.0，将显示给用户
-          </div>
-        </el-form-item>
-
-        <el-form-item label="版本代码" prop="versionCode">
-          <el-input-number v-model="formData.versionCode" :min="1" />
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            版本代码，保留原有字段以兼容性
-          </div>
-        </el-form-item>
-
-        <el-form-item label="iOS 版本代码" prop="iosVersionCode">
-          <el-input-number v-model="formData.iosVersionCode" :min="1" />
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            iOS 构建号，用于 App Store 版本管理
-          </div>
-        </el-form-item>
-
-        <el-form-item label="Android 版本代码" prop="androidVersionCode">
-          <el-input-number v-model="formData.androidVersionCode" :min="1" />
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            Android 构建号，每次发布需递增
-          </div>
-        </el-form-item>
-
-        <el-divider content-position="left">基础配置</el-divider>
-        <el-form-item label="默认语言" prop="locale">
-          <el-select v-model="formData.locale">
-            <el-option label="简体中文 (zh_CN)" value="zh_CN" />
-            <el-option label="繁体中文 (zh_TW)" value="zh_TW" />
-            <el-option label="English (en_US)" value="en_US" />
-          </el-select>
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            应用的默认语言设置
-          </div>
-        </el-form-item>
-
-        <el-form-item label="iOS Team ID">
-          <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-            <el-input v-model="formData.teamId" placeholder="如：NU8N6PC4M2" style="flex: 1;" />
-            <el-popover
-              placement="right"
-              :width="450"
-              trigger="hover"
-              :show-after="200"
-            >
-              <template #reference>
-                <el-icon 
-                  :size="18" 
-                  style="color: #909399; cursor: pointer; flex-shrink: 0;"
-                  :class="{ 'hover-icon': true }"
-                >
-                  <QuestionFilled />
-                </el-icon>
+        <div class="config-content-wrapper">
+          <h3>其他配置</h3>
+          
+          <el-collapse v-model="activeCollapseItems" class="config-collapse">
+            <el-collapse-item title="版本配置" name="version-config" id="version-config">
+              <template #title>
+                <span class="collapse-title">版本配置</span>
               </template>
-              <div style="text-align: center;">
-                <img 
-                  src="/ios-teamid.jpg" 
-                  alt="Team ID 使用说明" 
-                  style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
-                />
-              </div>
-            </el-popover>
-          </div>
-          <div class="form-tip" style="margin-top: 8px; display: block; width: 100%;">
-            <el-icon><InfoFilled /></el-icon>
-            iOS 开发团队 ID，用于 iOS 应用签名。<strong style="color: #e6a23c;">打包时必填项</strong> 请前往
-            <el-link
-              href="https://developer.apple.com/account"
-              target="_blank"
-              type="primary"
-              style="margin: 0 4px"
-            >
-              Apple Developer 账号
-            </el-link>
-            查看并复制
-          </div>
-        </el-form-item>
+              <el-form-item label="版本号" prop="versionName">
+                <el-input v-model="formData.versionName" placeholder="1.0.0" />
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  版本名称，如 1.0.0，将显示给用户
+                </div>
+              </el-form-item>
 
-        <el-divider content-position="left">企业配置</el-divider>
-        <el-form-item label="集团 ID">
-          <el-input v-model="formData.corporationId" placeholder="如：247" />
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            集团 ID，用于多品牌管理。<strong style="color: #e6a23c;">打包时必填项</strong>
-          </div>
-        </el-form-item>
+              <el-form-item label="版本代码" prop="versionCode">
+                <el-input-number v-model="formData.versionCode" :min="1" />
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  版本代码，保留原有字段以兼容性
+                </div>
+              </el-form-item>
 
-        <el-form-item label="装修 ID">
-          <el-input v-model="formData.extAppId" placeholder="如：1951103932717666313" />
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            装修 ID，用于应用主题和样式配置。<strong style="color: #e6a23c;">打包时必填项</strong>
-          </div>
-        </el-form-item>
+              <el-form-item label="iOS 版本代码" prop="iosVersionCode">
+                <el-input-number v-model="formData.iosVersionCode" :min="1" />
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  iOS 构建号，用于 App Store 版本管理
+                </div>
+              </el-form-item>
 
-        <el-divider content-position="left">App Store 配置</el-divider>
-        <el-form-item label="iOS 下载链接">
-          <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-            <el-input v-model="formData.iosDownloadUrl" placeholder="如：https://apps.apple.com/cn/app/molly-tea/id6749044844" style="flex: 1;" />
-            <el-popover
-              placement="right"
-              :width="450"
-              trigger="hover"
-              :show-after="200"
-            >
-              <template #reference>
-                <el-icon 
-                  :size="18" 
-                  style="color: #909399; cursor: pointer; flex-shrink: 0;"
-                  :class="{ 'hover-icon': true }"
-                >
-                  <QuestionFilled />
-                </el-icon>
+              <el-form-item label="Android 版本代码" prop="androidVersionCode">
+                <el-input-number v-model="formData.androidVersionCode" :min="1" />
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  Android 构建号，每次发布需递增
+                </div>
+              </el-form-item>
+            </el-collapse-item>
+
+            <el-collapse-item title="基础配置" name="basic-config" id="basic-config">
+              <template #title>
+                <span class="collapse-title">基础配置</span>
               </template>
-              <div style="text-align: center;">
-                <img 
-                  src="/ios-download-tip.png" 
-                  alt="iOS 下载链接使用说明" 
-                  style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
-                />
-              </div>
-            </el-popover>
-          </div>
-          <div class="form-tip" style="color: #e6a23c; margin-top: 8px; display: block; width: 100%;">
-            <el-icon><InfoFilled /></el-icon>
-            <strong>上架后记得补齐</strong> - iOS App Store 下载链接，用于 App Association 配置。安卓下载链接会自动生成，无需添加。
-          </div>
-        </el-form-item>
+              <el-form-item label="默认语言" prop="locale">
+                <el-select v-model="formData.locale">
+                  <el-option label="简体中文 (zh_CN)" value="zh_CN" />
+                  <el-option label="繁体中文 (zh_TW)" value="zh_TW" />
+                  <el-option label="English (en_US)" value="en_US" />
+                </el-select>
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  应用的默认语言设置
+                </div>
+              </el-form-item>
 
-        <el-form-item label="主题颜色">
-          <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-            <el-input v-model="formData.themeColor" placeholder="#52a1ff" style="flex: 1;">
-              <template #prepend>
-                <el-color-picker v-model="formData.themeColor" />
+              <el-form-item label="iOS Team ID">
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                  <el-input v-model="formData.teamId" placeholder="如：NU8N6PC4M2" style="flex: 1;" />
+                  <el-popover
+                    placement="right"
+                    :width="450"
+                    trigger="hover"
+                    :show-after="200"
+                  >
+                    <template #reference>
+                      <el-icon 
+                        :size="18" 
+                        style="color: #909399; cursor: pointer; flex-shrink: 0;"
+                        :class="{ 'hover-icon': true }"
+                      >
+                        <QuestionFilled />
+                      </el-icon>
+                    </template>
+                    <div style="text-align: center;">
+                      <img 
+                        src="/ios-teamid.jpg" 
+                        alt="Team ID 使用说明" 
+                        style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
+                      />
+                    </div>
+                  </el-popover>
+                </div>
+                <div class="form-tip" style="margin-top: 8px; display: block; width: 100%;">
+                  <el-icon><InfoFilled /></el-icon>
+                  iOS 开发团队 ID，用于 iOS 应用签名。<strong style="color: #e6a23c;">打包时必填项</strong> 请前往
+                  <el-link
+                    href="https://developer.apple.com/account"
+                    target="_blank"
+                    type="primary"
+                    style="margin: 0 4px"
+                  >
+                    Apple Developer 账号
+                  </el-link>
+                  查看并复制
+                </div>
+              </el-form-item>
+            </el-collapse-item>
+
+            <el-collapse-item title="企业配置" name="enterprise-config" id="enterprise-config">
+              <template #title>
+                <span class="collapse-title">企业配置</span>
               </template>
-            </el-input>
-            <el-popover
-              placement="right"
-              :width="450"
-              trigger="hover"
-              :show-after="200"
-            >
-              <template #reference>
-                <el-icon 
-                  :size="18" 
-                  style="color: #909399; cursor: pointer; flex-shrink: 0;"
-                  :class="{ 'hover-icon': true }"
-                >
-                  <QuestionFilled />
-                </el-icon>
+              <el-form-item label="集团 ID">
+                <el-input v-model="formData.corporationId" placeholder="如：247" />
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  集团 ID，用于多品牌管理。<strong style="color: #e6a23c;">打包时必填项</strong>
+                </div>
+              </el-form-item>
+
+              <el-form-item label="装修 ID">
+                <el-input v-model="formData.extAppId" placeholder="如：1951103932717666313" />
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  装修 ID，用于应用主题和样式配置。<strong style="color: #e6a23c;">打包时必填项</strong>
+                </div>
+              </el-form-item>
+            </el-collapse-item>
+
+            <el-collapse-item title="App Store 配置" name="appstore-config" id="appstore-config">
+              <template #title>
+                <span class="collapse-title">App Store 配置</span>
               </template>
-              <div style="text-align: center;">
-                <img 
-                  src="/ios-download-tip.png" 
-                  alt="主题颜色使用说明" 
-                  style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
-                />
-              </div>
-            </el-popover>
-          </div>
-          <div class="form-tip" style="margin-top: 8px; display: block; width: 100%;">
-            <el-icon><InfoFilled /></el-icon>
-            主题颜色，用于浏览器主题色设置，格式：十六进制颜色码
-          </div>
-        </el-form-item>
+              <el-form-item label="iOS 下载链接">
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                  <el-input v-model="formData.iosDownloadUrl" placeholder="如：https://apps.apple.com/cn/app/molly-tea/id6749044844" style="flex: 1;" />
+                  <el-popover
+                    placement="right"
+                    :width="450"
+                    trigger="hover"
+                    :show-after="200"
+                  >
+                    <template #reference>
+                      <el-icon 
+                        :size="18" 
+                        style="color: #909399; cursor: pointer; flex-shrink: 0;"
+                        :class="{ 'hover-icon': true }"
+                      >
+                        <QuestionFilled />
+                      </el-icon>
+                    </template>
+                    <div style="text-align: center;">
+                      <img 
+                        src="/ios-download-tip.png" 
+                        alt="iOS 下载链接使用说明" 
+                        style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
+                      />
+                    </div>
+                  </el-popover>
+                </div>
+                <div class="form-tip" style="color: #e6a23c; margin-top: 8px; display: block; width: 100%;">
+                  <el-icon><InfoFilled /></el-icon>
+                  <strong>上架后记得补齐</strong> - iOS App Store 下载链接，用于 App Association 配置。安卓下载链接会自动生成，无需添加。
+                </div>
+              </el-form-item>
 
-        <el-divider content-position="left">证书配置</el-divider>
-        <el-form-item label="iOS 发布证书 (.p12)">
-          <div style="display: flex; align-items: flex-start; gap: 20px;">
-            <div v-if="p12File || p12FileName" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6;">
-              <el-icon style="color: #67c23a;"><Document /></el-icon>
-              <span style="font-size: 14px;">{{ p12FileName || 'app.p12' }}</span>
-              <el-button
-                type="danger"
-                :icon="Delete"
-                circle
-                size="small"
-                @click="deleteP12File"
-                title="删除证书"
-              />
-            </div>
-            <div v-else style="padding: 8px 12px; background: #fafafa; border: 1px dashed #dcdfe6; border-radius: 4px; color: #909399; font-size: 14px;">
-              暂无证书
-            </div>
-            <div style="flex: 1;">
-              <el-upload
-                ref="p12UploadRef"
-                :auto-upload="false"
-                :on-change="handleP12Change"
-                :on-remove="handleP12Remove"
-                :limit="1"
-                accept=".p12"
-                :show-file-list="false"
-              >
-                <template #trigger>
-                  <el-button type="primary">
-                    <el-icon><Upload /></el-icon>
-                    选择 .p12 文件
-                  </el-button>
-                </template>
-              </el-upload>
-              <div class="form-tip" style="margin-top: 8px;">
-                <el-icon><InfoFilled /></el-icon>
-                上传 iOS 发布证书文件，将自动重命名为 app.p12。<strong style="color: #e6a23c;">打包时必填项</strong>
-                <el-link
-                  href="https://doc.weixin.qq.com/doc/w3_AHwA9AboAOcCNvWD6OtO3QuOfv211?scode=AMkAYwc4AAwexSOiUVAHwA9AboAOc"
-                  target="_blank"
-                  type="primary"
-                  style="margin-left: 4px"
-                >
-                  开发参考文档
-                </el-link>
-              </div>
-            </div>
-          </div>
-        </el-form-item>
+              <el-form-item label="主题颜色">
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                  <el-input v-model="formData.themeColor" placeholder="#52a1ff" style="flex: 1;">
+                    <template #prepend>
+                      <el-color-picker v-model="formData.themeColor" />
+                    </template>
+                  </el-input>
+                  <el-popover
+                    placement="right"
+                    :width="450"
+                    trigger="hover"
+                    :show-after="200"
+                  >
+                    <template #reference>
+                      <el-icon 
+                        :size="18" 
+                        style="color: #909399; cursor: pointer; flex-shrink: 0;"
+                        :class="{ 'hover-icon': true }"
+                      >
+                        <QuestionFilled />
+                      </el-icon>
+                    </template>
+                    <div style="text-align: center;">
+                      <img 
+                        src="/ios-download-tip.png" 
+                        alt="主题颜色使用说明" 
+                        style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
+                      />
+                    </div>
+                  </el-popover>
+                </div>
+                <div class="form-tip" style="margin-top: 8px; display: block; width: 100%;">
+                  <el-icon><InfoFilled /></el-icon>
+                  主题颜色，用于浏览器主题色设置，格式：十六进制颜色码
+                </div>
+              </el-form-item>
+            </el-collapse-item>
 
-        <el-form-item label="iOS 描述文件 (.mobileprovision)">
-          <div style="display: flex; align-items: flex-start; gap: 20px;">
-            <div v-if="mobileprovisionFile || mobileprovisionFileName" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6;">
-              <el-icon style="color: #67c23a;"><Document /></el-icon>
-              <span style="font-size: 14px;">{{ mobileprovisionFileName || 'app.mobileprovision' }}</span>
-              <el-button
-                type="danger"
-                :icon="Delete"
-                circle
-                size="small"
-                @click="deleteMobileprovisionFile"
-                title="删除描述文件"
-              />
-            </div>
-            <div v-else style="padding: 8px 12px; background: #fafafa; border: 1px dashed #dcdfe6; border-radius: 4px; color: #909399; font-size: 14px;">
-              暂无描述文件
-            </div>
-            <div style="flex: 1;">
-              <el-upload
-                ref="mobileprovisionUploadRef"
-                :auto-upload="false"
-                :on-change="handleMobileprovisionChange"
-                :on-remove="handleMobileprovisionRemove"
-                :limit="1"
-                accept=".mobileprovision"
-                :show-file-list="false"
-              >
-                <template #trigger>
-                  <el-button type="primary">
-                    <el-icon><Upload /></el-icon>
-                    选择 .mobileprovision 文件
-                  </el-button>
-                </template>
-              </el-upload>
-              <div class="form-tip" style="margin-top: 8px;">
-                <el-icon><InfoFilled /></el-icon>
-                上传 iOS 描述文件，将自动重命名为 app.mobileprovision。<strong style="color: #e6a23c;">打包时必填项</strong>
-                <el-link
-                  href="https://doc.weixin.qq.com/doc/w3_AHwA9AboAOcCNvWD6OtO3QuOfv211?scode=AMkAYwc4AAwexSOiUVAHwA9AboAOc"
-                  target="_blank"
-                  type="primary"
-                  style="margin-left: 4px"
-                >
-                  开发参考文档
-                </el-link>
-              </div>
-            </div>
-          </div>
-        </el-form-item>
-
-        <el-divider content-position="left">功能开关</el-divider>
-        <el-form-item label="功能开关">
-          <el-checkbox v-model="formData.isSupportEnterprise">支持企业包</el-checkbox>
-          <el-checkbox v-model="formData.isTest" disabled>测试环境</el-checkbox>
-          <el-checkbox v-model="formData.isSupportHotUpdate">支持热更新</el-checkbox>
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            功能开关配置：企业包（是否支持企业版）、热更新（是否支持代码热更新）。测试环境开关已与 API 地区绑定，选择测试环境时自动勾选，不可手动修改
-          </div>
-        </el-form-item>
-
-        <el-divider content-position="left">其他文件</el-divider>
-        <el-form-item label="其他文件">
-          <div style="width: 100%;">
-            <div v-if="otherFiles.length > 0" style="margin-bottom: 12px;">
-              <div 
-                v-for="(file, index) in otherFiles" 
-                :key="index"
-                style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6; margin-bottom: 8px;"
-              >
-                <el-icon style="color: #67c23a;"><Document /></el-icon>
-                <span style="font-size: 14px; flex: 1;">{{ file.name || file.filename }}</span>
-                <el-button
-                  type="danger"
-                  :icon="Delete"
-                  circle
-                  size="small"
-                  @click="removeOtherFile(index)"
-                  title="删除文件"
-                />
-              </div>
-            </div>
-            <el-upload
-              ref="otherFilesUploadRef"
-              :auto-upload="false"
-              :on-change="handleOtherFileChange"
-              :on-remove="handleOtherFileRemove"
-              :multiple="true"
-              :show-file-list="false"
-            >
-              <template #trigger>
-                <el-button type="primary">
-                  <el-icon><Upload /></el-icon>
-                  选择文件
-                </el-button>
+            <el-collapse-item title="证书配置" name="certificate-config" id="certificate-config">
+              <template #title>
+                <span class="collapse-title">证书配置</span>
               </template>
-            </el-upload>
-            <div class="form-tip" style="margin-top: 8px;">
-              <el-icon><InfoFilled /></el-icon>
-              上传其他文件到 <code>appConfig/{{ formData.alias || '品牌别名' }}/other/</code> 目录，用于存放如 AuthKey、google-services.json 等配置文件。支持上传多个文件，文件类型不限。
-            </div>
-          </div>
-        </el-form-item>
+              <el-form-item label="iOS 发布证书 (.p12)">
+                <div style="display: flex; align-items: flex-start; gap: 20px;">
+                  <div v-if="p12File || p12FileName" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6;">
+                    <el-icon style="color: #67c23a;"><Document /></el-icon>
+                    <span style="font-size: 14px;">{{ p12FileName || 'app.p12' }}</span>
+                    <el-button
+                      type="danger"
+                      :icon="Delete"
+                      circle
+                      size="small"
+                      @click="deleteP12File"
+                      title="删除证书"
+                    />
+                  </div>
+                  <div v-else style="padding: 8px 12px; background: #fafafa; border: 1px dashed #dcdfe6; border-radius: 4px; color: #909399; font-size: 14px;">
+                    暂无证书
+                  </div>
+                  <div style="flex: 1;">
+                    <el-upload
+                      ref="p12UploadRef"
+                      :auto-upload="false"
+                      :on-change="handleP12Change"
+                      :on-remove="handleP12Remove"
+                      :limit="1"
+                      accept=".p12"
+                      :show-file-list="false"
+                    >
+                      <template #trigger>
+                        <el-button type="primary">
+                          <el-icon><Upload /></el-icon>
+                          选择 .p12 文件
+                        </el-button>
+                      </template>
+                    </el-upload>
+                    <div class="form-tip" style="margin-top: 8px;">
+                      <el-icon><InfoFilled /></el-icon>
+                      上传 iOS 发布证书文件，将自动重命名为 app.p12。<strong style="color: #e6a23c;">打包时必填项</strong>
+                      <el-link
+                        href="https://doc.weixin.qq.com/doc/w3_AHwA9AboAOcCNvWD6OtO3QuOfv211?scode=AMkAYwc4AAwexSOiUVAHwA9AboAOc"
+                        target="_blank"
+                        type="primary"
+                        style="margin-left: 4px"
+                      >
+                        开发参考文档
+                      </el-link>
+                    </div>
+                  </div>
+                </div>
+              </el-form-item>
+
+              <el-form-item label="iOS 描述文件 (.mobileprovision)">
+                <div style="display: flex; align-items: flex-start; gap: 20px;">
+                  <div v-if="mobileprovisionFile || mobileprovisionFileName" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6;">
+                    <el-icon style="color: #67c23a;"><Document /></el-icon>
+                    <span style="font-size: 14px;">{{ mobileprovisionFileName || 'app.mobileprovision' }}</span>
+                    <el-button
+                      type="danger"
+                      :icon="Delete"
+                      circle
+                      size="small"
+                      @click="deleteMobileprovisionFile"
+                      title="删除描述文件"
+                    />
+                  </div>
+                  <div v-else style="padding: 8px 12px; background: #fafafa; border: 1px dashed #dcdfe6; border-radius: 4px; color: #909399; font-size: 14px;">
+                    暂无描述文件
+                  </div>
+                  <div style="flex: 1;">
+                    <el-upload
+                      ref="mobileprovisionUploadRef"
+                      :auto-upload="false"
+                      :on-change="handleMobileprovisionChange"
+                      :on-remove="handleMobileprovisionRemove"
+                      :limit="1"
+                      accept=".mobileprovision"
+                      :show-file-list="false"
+                    >
+                      <template #trigger>
+                        <el-button type="primary">
+                          <el-icon><Upload /></el-icon>
+                          选择 .mobileprovision 文件
+                        </el-button>
+                      </template>
+                    </el-upload>
+                    <div class="form-tip" style="margin-top: 8px;">
+                      <el-icon><InfoFilled /></el-icon>
+                      上传 iOS 描述文件，将自动重命名为 app.mobileprovision。<strong style="color: #e6a23c;">打包时必填项</strong>
+                      <el-link
+                        href="https://doc.weixin.qq.com/doc/w3_AHwA9AboAOcCNvWD6OtO3QuOfv211?scode=AMkAYwc4AAwexSOiUVAHwA9AboAOc"
+                        target="_blank"
+                        type="primary"
+                        style="margin-left: 4px"
+                      >
+                        开发参考文档
+                      </el-link>
+                    </div>
+                  </div>
+                </div>
+              </el-form-item>
+            </el-collapse-item>
+
+            <el-collapse-item title="功能开关" name="feature-switch" id="feature-switch">
+              <template #title>
+                <span class="collapse-title">功能开关</span>
+              </template>
+              <el-form-item label="功能开关">
+                <el-table :data="[
+                  { 
+                    key: 'isSupportEnterprise', 
+                    name: '支持企业包', 
+                    description: '是否支持企业版应用',
+                    checked: formData.isSupportEnterprise,
+                    disabled: false
+                  },
+                  { 
+                    key: 'isTest', 
+                    name: '测试环境', 
+                    description: '是否是测试环境（已与 API 地区绑定，选择测试环境时自动勾选，不可手动修改）',
+                    checked: formData.isTest,
+                    disabled: true
+                  },
+                  { 
+                    key: 'isSupportHotUpdate', 
+                    name: '支持热更新', 
+                    description: '是否支持代码热更新功能',
+                    checked: formData.isSupportHotUpdate,
+                    disabled: false
+                  },
+                  { 
+                    key: 'isSupportAppSetting', 
+                    name: '支持应用设置', 
+                    description: '是否支持应用设置功能',
+                    checked: formData.isSupportAppSetting,
+                    disabled: !isRestosuiteOnlinePro,
+                    warning: !isRestosuiteOnlinePro ? '仅预生产环境（RestosuiteOnlinePro）可勾选，生产app不能勾选' : null
+                  }
+                ]" border style="width: 100%;">
+                  <el-table-column label="启用" width="80" align="center">
+                    <template #default="{ row }">
+                      <el-checkbox 
+                        v-model="formData[row.key]"
+                        :disabled="row.disabled"
+                      />
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="功能名称" prop="name" width="150" />
+                  <el-table-column label="说明">
+                    <template #default="{ row }">
+                      <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <span>{{ row.description }}</span>
+                        <el-alert
+                          v-if="row.warning"
+                          type="warning"
+                          :closable="false"
+                          show-icon
+                          style="margin-top: 4px;"
+                        >
+                          <template #title>
+                            <span style="font-size: 12px;">
+                              <strong>{{ row.warning }}</strong>
+                            </span>
+                          </template>
+                        </el-alert>
+                      </div>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </el-form-item>
+            </el-collapse-item>
+
+            <el-collapse-item title="其他文件" name="other-files" id="other-files">
+              <template #title>
+                <span class="collapse-title">其他文件</span>
+              </template>
+              <el-form-item label="其他文件">
+                <div style="width: 100%;">
+                  <div v-if="otherFiles.length > 0" style="margin-bottom: 12px;">
+                    <div 
+                      v-for="(file, index) in otherFiles" 
+                      :key="index"
+                      style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6; margin-bottom: 8px;"
+                    >
+                      <el-icon style="color: #67c23a;"><Document /></el-icon>
+                      <span style="font-size: 14px; flex: 1;">{{ file.name || file.filename }}</span>
+                      <el-button
+                        type="danger"
+                        :icon="Delete"
+                        circle
+                        size="small"
+                        @click="removeOtherFile(index)"
+                        title="删除文件"
+                      />
+                    </div>
+                  </div>
+                  <el-upload
+                    ref="otherFilesUploadRef"
+                    :auto-upload="false"
+                    :on-change="handleOtherFileChange"
+                    :on-remove="handleOtherFileRemove"
+                    :multiple="true"
+                    :show-file-list="false"
+                  >
+                    <template #trigger>
+                      <el-button type="primary">
+                        <el-icon><Upload /></el-icon>
+                        选择文件
+                      </el-button>
+                    </template>
+                  </el-upload>
+                  <div class="form-tip" style="margin-top: 8px;">
+                    <el-icon><InfoFilled /></el-icon>
+                    上传其他文件到 <code>appConfig/{{ formData.alias || '品牌别名' }}/other/</code> 目录，用于存放如 AuthKey、google-services.json 等配置文件。支持上传多个文件，文件类型不限。
+                  </div>
+                </div>
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
       </div>
 
       <!-- 步骤 4: 预览确认 -->
@@ -682,6 +852,10 @@ const submitting = ref(false);
 const aliasValidating = ref(false);
 const aliasError = ref('');
 const oldAlias = ref('');
+const activeNavItem = ref('');
+const activeCollapseItems = ref(['version-config', 'basic-config', 'enterprise-config', 'appstore-config', 'certificate-config', 'feature-switch', 'other-files']);
+const activeCollapseItemsStep1 = ref(['logo-config', 'package-config']);
+const navMenuCollapsed = ref(false);
 const logoUploadRef = ref(null);
 const logoFile = ref(null);
 const logoPreview = ref('');
@@ -716,7 +890,8 @@ const formData = reactive({
   themeColor: '#52a1ff',
   isSupportEnterprise: false,
   isTest: false,
-  isSupportHotUpdate: false
+  isSupportHotUpdate: false,
+  isSupportAppSetting: false
 });
 
 // API 地区选项（带域名显示）
@@ -804,6 +979,39 @@ const baseUrlPreview = computed(() => {
   return urlMap[formData.baseUrlRegion] || '';
 });
 
+// 计算属性：判断是否是 RestosuiteOnlinePro（预生产环境）
+const isRestosuiteOnlinePro = computed(() => {
+  return formData.alias === 'RestosuiteOnlinePro';
+});
+
+// 监听别名变化，如果不是 RestosuiteOnlinePro，自动取消勾选应用设置
+watch(() => formData.alias, (newAlias) => {
+  if (newAlias && newAlias !== 'RestosuiteOnlinePro') {
+    formData.isSupportAppSetting = false;
+  }
+});
+
+// 处理导航菜单选择，滚动到对应位置
+const handleNavSelect = (index) => {
+  activeNavItem.value = index;
+  const element = document.getElementById(index);
+  if (element) {
+    // 根据当前步骤展开对应的 collapse-item
+    if (currentStep.value === 0) {
+      if (!activeCollapseItemsStep1.value.includes(index)) {
+        activeCollapseItemsStep1.value.push(index);
+      }
+    } else if (currentStep.value === 2) {
+      if (!activeCollapseItems.value.includes(index)) {
+        activeCollapseItems.value.push(index);
+      }
+    }
+    // 等待 DOM 更新后滚动
+    setTimeout(() => {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+};
 
 // 处理地区变化，自动设置对应的 iOS App Links 域名和测试环境开关
 const handleRegionChange = (value) => {
@@ -897,6 +1105,7 @@ const config: BrandConfig = {
   isSupportEnterprise: ${formData.isSupportEnterprise}, // 是否支持企业包
   isTest: ${formData.isTest}, // 是否是测试环境
   isSupportHotUpdate: ${formData.isSupportHotUpdate}, // 是否支持热更新
+  isSupportAppSetting: ${formData.isSupportAppSetting}, // 是否支持应用设置
 
   // ===== App Association 配置 =====
   iosDownloadUrl: '${formData.iosDownloadUrl || ''}', // iOS App Store 下载链接
@@ -1222,8 +1431,13 @@ const submitForm = async () => {
       themeColor: '#52a1ff',
       isSupportEnterprise: false,
       isTest: false,
-      isSupportHotUpdate: false
+      isSupportHotUpdate: false,
+      isSupportAppSetting: false
     });
+    // 如果不是 RestosuiteOnlinePro，重置应用设置开关
+    if (formData.alias !== 'RestosuiteOnlinePro') {
+      formData.isSupportAppSetting = false;
+    }
     // 清除 logo
     logoFile.value = null;
     logoPreview.value = '';
@@ -1263,6 +1477,88 @@ const submitForm = async () => {
 .step-content {
   min-height: 400px;
   padding: 20px 0;
+}
+
+.step-content-with-nav {
+  position: relative;
+}
+
+.config-nav-menu {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  height: fit-content;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 8px 0;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  transition: width 0.3s, left 0.3s;
+}
+
+.config-nav-menu.nav-menu-collapsed {
+  width: 50px;
+}
+
+.config-nav-menu.nav-menu-collapsed .nav-menu-header {
+  justify-content: center;
+  padding: 12px 8px;
+}
+
+.nav-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ebeef5;
+  margin-bottom: 8px;
+}
+
+.nav-menu-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #303133;
+  flex: 1;
+}
+
+.nav-menu-toggle {
+  flex-shrink: 0;
+}
+
+.nav-menu {
+  border-right: none;
+}
+
+.nav-menu .el-menu-item {
+  height: 40px;
+  line-height: 40px;
+  font-size: 13px;
+}
+
+.config-content-wrapper {
+  width: 1200px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding-left: 0;
+}
+
+.config-collapse {
+  margin-top: 20px;
+}
+
+.config-collapse .el-collapse-item {
+  margin-bottom: 16px;
+}
+
+.collapse-title {
+  font-weight: 500;
+  font-size: 15px;
+  color: #303133;
 }
 
 .step-content h3 {

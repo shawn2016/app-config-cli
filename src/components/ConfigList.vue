@@ -130,7 +130,7 @@
             </div>
             <span v-else>-</span>
           </template>
-          <template v-else-if="field.key === 'isSupportEnterprise' || field.key === 'isTest' || field.key === 'isSupportHotUpdate'">
+          <template v-else-if="field.key === 'isSupportEnterprise' || field.key === 'isTest' || field.key === 'isSupportHotUpdate' || field.key === 'isSupportAppSetting'">
             <el-tag v-if="row[field.key]" type="success" size="small">是</el-tag>
             <el-tag v-else type="info" size="small">否</el-tag>
           </template>
@@ -254,7 +254,7 @@
                 </div>
                 <span v-else>-</span>
               </template>
-              <template v-else-if="field.key === 'isSupportEnterprise' || field.key === 'isTest' || field.key === 'isSupportHotUpdate'">
+              <template v-else-if="field.key === 'isSupportEnterprise' || field.key === 'isTest' || field.key === 'isSupportHotUpdate' || field.key === 'isSupportAppSetting'">
                 <el-tag v-if="config[field.key]" type="success" size="small">是</el-tag>
                 <el-tag v-else type="info" size="small">否</el-tag>
               </template>
@@ -749,13 +749,67 @@
         </el-form-item>
 
         <el-form-item label="功能开关">
-          <el-checkbox v-model="editingConfig.isSupportEnterprise">支持企业包</el-checkbox>
-          <el-checkbox v-model="editingConfig.isTest" disabled>测试环境</el-checkbox>
-          <el-checkbox v-model="editingConfig.isSupportHotUpdate">支持热更新</el-checkbox>
-          <div class="form-tip">
-            <el-icon><InfoFilled /></el-icon>
-            功能开关配置：企业包（是否支持企业版）、热更新（是否支持代码热更新）。测试环境开关已与 API 地区绑定，选择测试环境时自动勾选，不可手动修改
-          </div>
+          <el-table :data="[
+            { 
+              key: 'isSupportEnterprise', 
+              name: '支持企业包', 
+              description: '是否支持企业版应用',
+              checked: editingConfig.isSupportEnterprise,
+              disabled: false
+            },
+            { 
+              key: 'isTest', 
+              name: '测试环境', 
+              description: '是否是测试环境（已与 API 地区绑定，选择测试环境时自动勾选，不可手动修改）',
+              checked: editingConfig.isTest,
+              disabled: true
+            },
+            { 
+              key: 'isSupportHotUpdate', 
+              name: '支持热更新', 
+              description: '是否支持代码热更新功能',
+              checked: editingConfig.isSupportHotUpdate,
+              disabled: false
+            },
+            { 
+              key: 'isSupportAppSetting', 
+              name: '支持应用设置', 
+              description: '是否支持应用设置功能',
+              checked: editingConfig.isSupportAppSetting,
+              disabled: !isEditRestosuiteOnlinePro,
+              warning: !isEditRestosuiteOnlinePro ? '仅预生产环境（RestosuiteOnlinePro）可勾选，生产app不能勾选' : null
+            }
+          ]" border style="width: 100%;">
+            <el-table-column label="启用" width="80" align="center">
+              <template #default="{ row }">
+                <el-checkbox 
+                  v-model="editingConfig[row.key]"
+                  :disabled="row.disabled"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="功能名称" prop="name" width="150" />
+            <el-table-column label="说明">
+              <template #default="{ row }">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <span>{{ row.description }}</span>
+                  <el-alert
+                    v-if="row.warning"
+                    type="warning"
+                    :closable="false"
+                    show-icon
+                    style="margin-top: 4px;"
+                  >
+                    <template #title>
+                      <span style="font-size: 12px;">
+                        <strong>{{ row.warning }}</strong>
+                      </span>
+                    </template>
+                  </el-alert>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
         </el-form-item>
 
         <el-divider content-position="left">其他文件</el-divider>
@@ -1219,7 +1273,7 @@
 <script setup>
 import { ref, onMounted, reactive, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document, Search, List, Grid, Setting, Picture, Loading, Link } from '@element-plus/icons-vue';
+import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document, Search, List, Grid, Setting, Picture, Loading, Link, WarningFilled } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -1271,6 +1325,7 @@ const allFields = [
   { key: 'isSupportEnterprise', label: '支持企业包', width: 120, default: false },
   { key: 'isTest', label: '测试环境', width: 100, default: false },
   { key: 'isSupportHotUpdate', label: '支持热更新', width: 120, default: false },
+  { key: 'isSupportAppSetting', label: '支持应用设置', width: 120, default: false },
   { key: 'createdAt', label: '创建时间', width: 180, default: true }
 ];
 
@@ -1310,6 +1365,11 @@ const visibleFieldsMap = computed(() => {
     map[key] = true;
   });
   return map;
+});
+
+// 计算属性：判断编辑的配置是否是 RestosuiteOnlinePro
+const isEditRestosuiteOnlinePro = computed(() => {
+  return editingConfig.value?.alias === 'RestosuiteOnlinePro';
 });
 
 // 环境选项
@@ -2073,6 +2133,11 @@ const editConfig = async (alias) => {
     // 根据 API 地区自动设置测试环境开关
     if (editingConfig.value.baseUrlRegion) {
       editingConfig.value.isTest = editingConfig.value.baseUrlRegion === 'test';
+    }
+    
+    // 如果不是 RestosuiteOnlinePro，自动取消勾选应用设置
+    if (editingConfig.value.alias !== 'RestosuiteOnlinePro') {
+      editingConfig.value.isSupportAppSetting = false;
     }
     
     // 加载 logo

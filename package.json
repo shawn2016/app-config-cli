@@ -1,6 +1,6 @@
 {
   "name": "app-config-cli",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "可视化生成和管理 appConfig 品牌配置的 CLI 工具",
   "main": "lib/index.js",
   "bin": {
