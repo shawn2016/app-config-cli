@@ -14,11 +14,13 @@ program
 示例:
   $ app-config serve             启动服务（默认端口 3000）
   $ app-config serve --port 8080 启动服务并指定端口 8080
+  $ app-config update            更新到最新版本
   $ app-config --version         显示版本号
   $ app-config --help            显示帮助信息
 
 更新工具:
-  $ npm install -g app-config-cli@latest
+  $ app-config update             快速更新到最新版本（推荐）
+  $ npm install -g app-config-cli@latest  手动更新
 
 更多信息:
   详细使用说明请查看: https://github.com/your-repo/app-config-cli
@@ -47,6 +49,52 @@ program
     
     console.log(chalk.blue(`正在启动服务，端口: ${port}...`));
     startServer(port);
+  });
+
+program
+  .command('update')
+  .description('更新工具到最新版本')
+  .addHelpText('after', `
+说明:
+  自动检查并更新 app-config-cli 到最新版本。
+  此命令会从 npm 仓库获取最新版本并安装。
+
+示例:
+  $ app-config update
+  `)
+  .action(async () => {
+    const { execSync } = require('child_process');
+    
+    try {
+      console.log(chalk.blue('正在检查最新版本...'));
+      
+      // 获取最新版本号
+      const latestVersion = execSync('npm view app-config-cli version', { encoding: 'utf-8' }).trim();
+      const currentVersion = packageJson.version;
+      
+      console.log(chalk.gray(`当前版本: ${currentVersion}`));
+      console.log(chalk.gray(`最新版本: ${latestVersion}`));
+      
+      if (latestVersion === currentVersion) {
+        console.log(chalk.green('✓ 已是最新版本，无需更新'));
+        return;
+      }
+      
+      console.log(chalk.yellow(`\n发现新版本 ${latestVersion}，开始更新...`));
+      console.log(chalk.gray('正在安装最新版本...'));
+      
+      // 更新到最新版本
+      execSync('npm install -g app-config-cli@latest', { stdio: 'inherit' });
+      
+      console.log(chalk.green(`\n✓ 更新成功！已更新到版本 ${latestVersion}`));
+      console.log(chalk.blue('运行 app-config --version 查看新版本号'));
+      
+    } catch (error) {
+      console.error(chalk.red('\n✗ 更新失败:'), error.message);
+      console.log(chalk.yellow('\n提示: 可以手动运行以下命令更新:'));
+      console.log(chalk.cyan('  npm install -g app-config-cli@latest'));
+      process.exit(1);
+    }
   });
 
 program.parse();

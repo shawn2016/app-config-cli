@@ -7,7 +7,7 @@
             v-model="searchText"
             placeholder="搜索品牌名、应用名、英文名等..."
             clearable
-            style="width: 300px; margin-right: 10px;"
+            style="width: 300px; margin-right: 10px"
             @input="handleSearch"
           >
             <template #prefix>
@@ -18,7 +18,7 @@
             v-model="filterRegion"
             placeholder="筛选环境"
             clearable
-            style="width: 150px; margin-right: 10px;"
+            style="width: 150px; margin-right: 10px"
             @change="handleSearch"
           >
             <el-option label="全部" value="" />
@@ -103,7 +103,12 @@
           <template v-else-if="field.key === 'createdAt'">
             {{ formatDate(row[field.key]) }}
           </template>
-          <template v-else-if="field.key === 'iosDownloadUrl' || field.key === 'androidDownloadUrl'">
+          <template
+            v-else-if="
+              field.key === 'iosDownloadUrl' ||
+              field.key === 'androidDownloadUrl'
+            "
+          >
             <el-link
               v-if="row[field.key]"
               :href="row[field.key]"
@@ -115,63 +120,115 @@
             <span v-else>-</span>
           </template>
           <template v-else-if="field.key === 'themeColor'">
-            <div v-if="row[field.key]" style="display: flex; align-items: center; gap: 8px;">
+            <div
+              v-if="row[field.key]"
+              style="display: flex; align-items: center; gap: 8px"
+            >
               <span
-                :style="{ 
-                  display: 'inline-block', 
-                  width: '20px', 
-                  height: '20px', 
-                  backgroundColor: row[field.key], 
+                :style="{
+                  display: 'inline-block',
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: row[field.key],
                   borderRadius: '4px',
-                  border: '1px solid #dcdfe6'
+                  border: '1px solid #dcdfe6',
                 }"
               ></span>
               <span>{{ row[field.key] }}</span>
             </div>
             <span v-else>-</span>
           </template>
-          <template v-else-if="field.key === 'isSupportEnterprise' || field.key === 'isTest' || field.key === 'isSupportHotUpdate' || field.key === 'isSupportAppSetting'">
-            <el-tag v-if="row[field.key]" type="success" size="small">是</el-tag>
+          <template
+            v-else-if="
+              field.key === 'isSupportEnterprise' ||
+              field.key === 'isTest' ||
+              field.key === 'isSupportHotUpdate' ||
+              field.key === 'isSupportAppSetting'
+            "
+          >
+            <el-tag v-if="row[field.key]" type="success" size="small"
+              >是</el-tag
+            >
             <el-tag v-else type="info" size="small">否</el-tag>
           </template>
-          <template v-else-if="field.key === 'versionName' || field.key === 'androidVersionCode' || field.key === 'iosVersionCode' || field.key === 'versionCode'">
-            <span style="font-weight: 500; color: #409eff;">{{ row[field.key] || '-' }}</span>
+          <template
+            v-else-if="
+              field.key === 'versionName' ||
+              field.key === 'androidVersionCode' ||
+              field.key === 'iosVersionCode' ||
+              field.key === 'versionCode'
+            "
+          >
+            <span style="font-weight: 500; color: #409eff">{{
+              row[field.key] || "-"
+            }}</span>
           </template>
           <template v-else>
-            {{ row[field.key] || '-' }}
+            {{ row[field.key] || "-" }}
           </template>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="500" fixed="right">
         <template #default="{ row }">
-          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px">
             <template v-if="isDeveloper">
-              <el-button type="primary" link @click="viewConfig(row.folderName || row.alias)">
+              <el-button
+                type="primary"
+                link
+                @click="viewConfig(row.folderName || row.alias)"
+              >
                 查看
               </el-button>
-              <el-button type="warning" link @click="editConfig(row.folderName || row.alias)">
+              <el-button
+                type="warning"
+                link
+                @click="editConfig(row.folderName || row.alias)"
+              >
                 编辑
               </el-button>
-              <el-button type="danger" link @click="deleteConfig(row.folderName || row.alias)">
+              <el-button
+                type="danger"
+                link
+                @click="deleteConfig(row.folderName || row.alias)"
+              >
                 删除
               </el-button>
-              <el-button type="success" link @click="viewKeystoreInfo(row.folderName || row.alias)">
+              <el-button
+                type="success"
+                link
+                @click="viewKeystoreInfo(row.folderName || row.alias)"
+              >
                 查看密钥
               </el-button>
-              <el-button type="info" link @click="regenerateKeystore(row.folderName || row.alias)">
+              <el-button
+                type="info"
+                link
+                @click="regenerateKeystore(row.folderName || row.alias)"
+              >
                 重新生成 Keystore
               </el-button>
             </template>
-            <el-button type="warning" link @click="showCloudBuildDialog(row.folderName || row.alias, row)">
+            <el-button
+              type="warning"
+              link
+              @click="showCloudBuildDialog(row.folderName || row.alias, row)"
+            >
               云打包
             </el-button>
-            <el-button 
-              v-if="row.packagename" 
-              type="success" 
-              link 
+            <el-button
+              v-if="row.packagename"
+              type="success"
+              link
               @click="showConvertAABDialog(row.folderName || row.alias, row)"
             >
               aab转apk
+            </el-button>
+            <el-button
+              type="info"
+              link
+              @click="showTestPushDialog(row.folderName || row.alias, row)"
+            >
+              消息推送测试
             </el-button>
           </div>
         </template>
@@ -220,14 +277,24 @@
           <!-- 配置信息 -->
           <el-descriptions :column="1" size="small" border>
             <el-descriptions-item
-              v-for="field in visibleFields.filter(f => f.key !== 'logoExists' && f.key !== 'alias' && f.key !== 'baseUrlRegion')"
+              v-for="field in visibleFields.filter(
+                f =>
+                  f.key !== 'logoExists' &&
+                  f.key !== 'alias' &&
+                  f.key !== 'baseUrlRegion'
+              )"
               :key="field.key"
               :label="field.label"
             >
               <template v-if="field.key === 'createdAt'">
                 {{ formatDate(config[field.key]) }}
               </template>
-              <template v-else-if="field.key === 'iosDownloadUrl' || field.key === 'androidDownloadUrl'">
+              <template
+                v-else-if="
+                  field.key === 'iosDownloadUrl' ||
+                  field.key === 'androidDownloadUrl'
+                "
+              >
                 <el-link
                   v-if="config[field.key]"
                   :href="config[field.key]"
@@ -239,30 +306,51 @@
                 <span v-else>-</span>
               </template>
               <template v-else-if="field.key === 'themeColor'">
-                <div v-if="config[field.key]" style="display: flex; align-items: center; gap: 8px;">
+                <div
+                  v-if="config[field.key]"
+                  style="display: flex; align-items: center; gap: 8px"
+                >
                   <span
-                    :style="{ 
-                      display: 'inline-block', 
-                      width: '20px', 
-                      height: '20px', 
-                      backgroundColor: config[field.key], 
+                    :style="{
+                      display: 'inline-block',
+                      width: '20px',
+                      height: '20px',
+                      backgroundColor: config[field.key],
                       borderRadius: '4px',
-                      border: '1px solid #dcdfe6'
+                      border: '1px solid #dcdfe6',
                     }"
                   ></span>
                   <span>{{ config[field.key] }}</span>
                 </div>
                 <span v-else>-</span>
               </template>
-              <template v-else-if="field.key === 'isSupportEnterprise' || field.key === 'isTest' || field.key === 'isSupportHotUpdate' || field.key === 'isSupportAppSetting'">
-                <el-tag v-if="config[field.key]" type="success" size="small">是</el-tag>
+              <template
+                v-else-if="
+                  field.key === 'isSupportEnterprise' ||
+                  field.key === 'isTest' ||
+                  field.key === 'isSupportHotUpdate' ||
+                  field.key === 'isSupportAppSetting'
+                "
+              >
+                <el-tag v-if="config[field.key]" type="success" size="small"
+                  >是</el-tag
+                >
                 <el-tag v-else type="info" size="small">否</el-tag>
               </template>
-              <template v-else-if="field.key === 'versionName' || field.key === 'androidVersionCode' || field.key === 'iosVersionCode' || field.key === 'versionCode'">
-                <span style="font-weight: 500; color: #409eff;">{{ config[field.key] || '-' }}</span>
+              <template
+                v-else-if="
+                  field.key === 'versionName' ||
+                  field.key === 'androidVersionCode' ||
+                  field.key === 'iosVersionCode' ||
+                  field.key === 'versionCode'
+                "
+              >
+                <span style="font-weight: 500; color: #409eff">{{
+                  config[field.key] || "-"
+                }}</span>
               </template>
               <template v-else>
-                {{ config[field.key] || '-' }}
+                {{ config[field.key] || "-" }}
               </template>
             </el-descriptions-item>
           </el-descriptions>
@@ -270,32 +358,69 @@
           <!-- 操作按钮 -->
           <div class="card-actions">
             <template v-if="isDeveloper">
-              <el-button type="primary" link @click="viewConfig(config.folderName || config.alias)">
+              <el-button
+                type="primary"
+                link
+                @click="viewConfig(config.folderName || config.alias)"
+              >
                 查看
               </el-button>
-              <el-button type="warning" link @click="editConfig(config.folderName || config.alias)">
+              <el-button
+                type="warning"
+                link
+                @click="editConfig(config.folderName || config.alias)"
+              >
                 编辑
               </el-button>
-              <el-button type="danger" link @click="deleteConfig(config.folderName || config.alias)">
+              <el-button
+                type="danger"
+                link
+                @click="deleteConfig(config.folderName || config.alias)"
+              >
                 删除
               </el-button>
-              <el-button type="success" link @click="viewKeystoreInfo(config.folderName || config.alias)">
+              <el-button
+                type="success"
+                link
+                @click="viewKeystoreInfo(config.folderName || config.alias)"
+              >
                 查看密钥
               </el-button>
-              <el-button type="info" link @click="regenerateKeystore(config.folderName || config.alias)">
+              <el-button
+                type="info"
+                link
+                @click="regenerateKeystore(config.folderName || config.alias)"
+              >
                 重新生成 Keystore
               </el-button>
             </template>
-            <el-button type="warning" link @click="showCloudBuildDialog(config.folderName || config.alias, config)">
+            <el-button
+              type="warning"
+              link
+              @click="
+                showCloudBuildDialog(config.folderName || config.alias, config)
+              "
+            >
               云打包
             </el-button>
-            <el-button 
-              v-if="config.packagename" 
-              type="success" 
-              link 
-              @click="showConvertAABDialog(config.folderName || config.alias, config)"
+            <el-button
+              v-if="config.packagename"
+              type="success"
+              link
+              @click="
+                showConvertAABDialog(config.folderName || config.alias, config)
+              "
             >
               aab转apk
+            </el-button>
+            <el-button
+              type="info"
+              link
+              @click="
+                showTestPushDialog(config.folderName || config.alias, config)
+              "
+            >
+              消息推送测试
             </el-button>
           </div>
         </div>
@@ -313,7 +438,7 @@
       title="配置显示字段"
       width="600px"
     >
-      <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+      <div style="margin-bottom: 15px; display: flex; gap: 10px">
         <el-button size="small" @click="selectAllFields">全选</el-button>
         <el-button size="small" @click="resetFieldConfig">恢复默认</el-button>
       </div>
@@ -378,7 +503,10 @@
 
         <el-divider content-position="left">包名配置</el-divider>
         <el-form-item label="Android 包名">
-          <el-input v-model="editingConfig.packagename" placeholder="如：ai.restosuite.mollytea">
+          <el-input
+            v-model="editingConfig.packagename"
+            placeholder="如：ai.restosuite.mollytea"
+          >
             <template #append>
               <el-button @click="copyToClipboard(editingConfig.packagename)">
                 <el-icon><DocumentCopy /></el-icon>
@@ -388,7 +516,9 @@
           </el-input>
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            Android 包名，用于 Android 应用标识。<strong style="color: #e6a23c;">打包时必填项</strong>
+            Android 包名，用于 Android 应用标识。<strong style="color: #e6a23c"
+              >打包时必填项</strong
+            >
             <el-link
               href="https://cinyja0w5wn.feishu.cn/wiki/BF9fwROcCiTW2tkaTdmcTK5xnyg"
               target="_blank"
@@ -401,7 +531,10 @@
         </el-form-item>
 
         <el-form-item label="iOS Bundle ID">
-          <el-input v-model="editingConfig.iosAppId" placeholder="如：ai.restosuite.mollytea">
+          <el-input
+            v-model="editingConfig.iosAppId"
+            placeholder="如：ai.restosuite.mollytea"
+          >
             <template #append>
               <el-button @click="copyToClipboard(editingConfig.iosAppId)">
                 <el-icon><DocumentCopy /></el-icon>
@@ -411,7 +544,9 @@
           </el-input>
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            iOS Bundle ID，用于 iOS 应用标识。<strong style="color: #e6a23c;">打包时必填项</strong>
+            iOS Bundle ID，用于 iOS 应用标识。<strong style="color: #e6a23c"
+              >打包时必填项</strong
+            >
             <el-link
               href="https://cinyja0w5wn.feishu.cn/wiki/Ek5UwfzkgiK4nbkc2MlcSqLMnGh"
               target="_blank"
@@ -424,18 +559,30 @@
         </el-form-item>
 
         <el-form-item label="应用名称">
-          <el-input v-model="editingConfig.appName" placeholder="请输入应用名称" />
+          <el-input
+            v-model="editingConfig.appName"
+            placeholder="请输入应用名称"
+          />
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            应用显示名称（中文），将显示在应用图标下方。<strong style="color: #e6a23c;">打包时必填项</strong>
+            应用显示名称（中文），将显示在应用图标下方。<strong
+              style="color: #e6a23c"
+              >打包时必填项</strong
+            >
           </div>
         </el-form-item>
 
         <el-form-item label="应用英文名">
-          <el-input v-model="editingConfig.appEnName" placeholder="请输入应用英文名" />
+          <el-input
+            v-model="editingConfig.appEnName"
+            placeholder="请输入应用英文名"
+          />
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            应用显示名称（英文），建议与 iOS CFBundleName 保持一致。<strong style="color: #e6a23c;">打包时必填项</strong>
+            应用显示名称（英文），建议与 iOS CFBundleName 保持一致。<strong
+              style="color: #e6a23c"
+              >打包时必填项</strong
+            >
           </div>
         </el-form-item>
 
@@ -455,7 +602,10 @@
           />
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            DCloud 应用 ID，用于 uni-app 打包。<strong style="color: #e6a23c;">打包时必填项</strong> 请前往
+            DCloud 应用 ID，用于 uni-app 打包。<strong style="color: #e6a23c"
+              >打包时必填项</strong
+            >
+            请前往
             <el-link
               href="https://dev.dcloud.net.cn/pages/app/list"
               target="_blank"
@@ -478,27 +628,53 @@
 
         <el-divider content-position="left">Logo 配置</el-divider>
         <el-form-item label="应用 Logo">
-          <div style="display: flex; align-items: flex-start; gap: 20px;">
-            <div v-if="editLogoPreview || editLogoUrl" style="position: relative; display: inline-block;">
-              <img 
-                :src="editLogoPreview || editLogoUrl" 
-                alt="Logo 预览" 
-                style="width: 102px; height: 102px; border: 1px solid #dcdfe6; border-radius: 8px; object-fit: contain; background: #f5f7fa;"
+          <div style="display: flex; align-items: flex-start; gap: 20px">
+            <div
+              v-if="editLogoPreview || editLogoUrl"
+              style="position: relative; display: inline-block"
+            >
+              <img
+                :src="editLogoPreview || editLogoUrl"
+                alt="Logo 预览"
+                style="
+                  width: 102px;
+                  height: 102px;
+                  border: 1px solid #dcdfe6;
+                  border-radius: 8px;
+                  object-fit: contain;
+                  background: #f5f7fa;
+                "
               />
               <el-button
                 type="danger"
                 :icon="Delete"
                 circle
                 size="small"
-                style="position: absolute; top: -8px; right: -8px;"
+                style="position: absolute; top: -8px; right: -8px"
                 @click="deleteEditLogo"
                 title="删除 Logo"
               />
             </div>
-            <div v-else style="width: 102px; height: 102px; border: 1px dashed #dcdfe6; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fafafa; color: #909399; font-size: 12px; text-align: center; padding: 10px;">
+            <div
+              v-else
+              style="
+                width: 102px;
+                height: 102px;
+                border: 1px dashed #dcdfe6;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #fafafa;
+                color: #909399;
+                font-size: 12px;
+                text-align: center;
+                padding: 10px;
+              "
+            >
               暂无 Logo
             </div>
-            <div style="flex: 1;">
+            <div style="flex: 1">
               <el-upload
                 ref="editLogoUploadRef"
                 :auto-upload="false"
@@ -515,9 +691,12 @@
                   </el-button>
                 </template>
               </el-upload>
-              <div class="form-tip" style="margin-top: 8px;">
+              <div class="form-tip" style="margin-top: 8px">
                 <el-icon><InfoFilled /></el-icon>
-                Logo 要求：PNG 格式，尺寸 1024x1024 像素。<strong style="color: #e6a23c;">打包时必填项</strong>
+                Logo 要求：PNG 格式，尺寸 1024x1024 像素。<strong
+                  style="color: #e6a23c"
+                  >打包时必填项</strong
+                >
               </div>
             </div>
           </div>
@@ -525,13 +704,13 @@
 
         <el-divider content-position="left">环境配置</el-divider>
         <el-form-item label="API 地区">
-          <el-select 
-            v-model="editingConfig.baseUrlRegion" 
+          <el-select
+            v-model="editingConfig.baseUrlRegion"
             placeholder="请选择 API 地区"
             @change="handleEditRegionChange"
           >
-            <el-option 
-              v-for="region in editRegionOptions" 
+            <el-option
+              v-for="region in editRegionOptions"
               :key="region.value"
               :label="region.label"
               :value="region.value"
@@ -561,7 +740,10 @@
         </el-form-item>
 
         <el-form-item label="Android 版本代码">
-          <el-input-number v-model="editingConfig.androidVersionCode" :min="1" />
+          <el-input-number
+            v-model="editingConfig.androidVersionCode"
+            :min="1"
+          />
         </el-form-item>
 
         <el-divider content-position="left">其他配置</el-divider>
@@ -574,8 +756,14 @@
         </el-form-item>
 
         <el-form-item label="iOS Team ID">
-          <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-            <el-input v-model="editingConfig.teamId" placeholder="如：NU8N6PC4M2" style="flex: 1;" />
+          <div
+            style="display: flex; align-items: center; gap: 8px; width: 100%"
+          >
+            <el-input
+              v-model="editingConfig.teamId"
+              placeholder="如：NU8N6PC4M2"
+              style="flex: 1"
+            />
             <el-popover
               placement="right"
               :width="450"
@@ -583,26 +771,37 @@
               :show-after="200"
             >
               <template #reference>
-                <el-icon 
-                  :size="18" 
-                  style="color: #909399; cursor: pointer; flex-shrink: 0;"
+                <el-icon
+                  :size="18"
+                  style="color: #909399; cursor: pointer; flex-shrink: 0"
                   :class="{ 'hover-icon': true }"
                 >
                   <QuestionFilled />
                 </el-icon>
               </template>
-              <div style="text-align: center;">
-                <img 
-                  src="/ios-download-tip.png" 
-                  alt="Team ID 使用说明" 
-                  style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
+              <div style="text-align: center">
+                <img
+                  src="/ios-download-tip.png"
+                  alt="Team ID 使用说明"
+                  style="
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 4px;
+                    display: block;
+                  "
                 />
               </div>
             </el-popover>
           </div>
-          <div class="form-tip" style="margin-top: 8px; display: block; width: 100%;">
+          <div
+            class="form-tip"
+            style="margin-top: 8px; display: block; width: 100%"
+          >
             <el-icon><InfoFilled /></el-icon>
-            iOS 开发团队 ID，用于 iOS 应用签名。<strong style="color: #e6a23c;">打包时必填项</strong> 请前往
+            iOS 开发团队 ID，用于 iOS 应用签名。<strong style="color: #e6a23c"
+              >打包时必填项</strong
+            >
+            请前往
             <el-link
               href="https://developer.apple.com/account"
               target="_blank"
@@ -616,26 +815,43 @@
         </el-form-item>
 
         <el-form-item label="集团 ID">
-          <el-input v-model="editingConfig.corporationId" placeholder="如：247" />
+          <el-input
+            v-model="editingConfig.corporationId"
+            placeholder="如：247"
+          />
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            集团 ID，用于多品牌管理。<strong style="color: #e6a23c;">打包时必填项</strong>
+            集团 ID，用于多品牌管理。<strong style="color: #e6a23c"
+              >打包时必填项</strong
+            >
           </div>
         </el-form-item>
 
         <el-form-item label="装修 ID">
-          <el-input v-model="editingConfig.extAppId" placeholder="如：1951103932717666313" />
+          <el-input
+            v-model="editingConfig.extAppId"
+            placeholder="如：1951103932717666313"
+          />
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            装修 ID，用于应用主题和样式配置。<strong style="color: #e6a23c;">打包时必填项</strong>
+            装修 ID，用于应用主题和样式配置。<strong style="color: #e6a23c"
+              >打包时必填项</strong
+            >
           </div>
         </el-form-item>
 
         <el-form-item label="iOS 下载链接">
-          <el-input v-model="editingConfig.iosDownloadUrl" placeholder="如：https://apps.apple.com/cn/app/molly-tea/id6749044844" />
-          <div class="form-tip" style="color: #e6a23c; margin-top: 8px; display: block; width: 100%;">
+          <el-input
+            v-model="editingConfig.iosDownloadUrl"
+            placeholder="如：https://apps.apple.com/cn/app/molly-tea/id6749044844"
+          />
+          <div
+            class="form-tip"
+            style="color: #e6a23c; margin-top: 8px; display: block; width: 100%"
+          >
             <el-icon><InfoFilled /></el-icon>
-            <strong>上架后记得补齐</strong> - iOS App Store 下载链接，用于 App Association 配置。安卓下载链接会自动生成，无需添加。
+            <strong>上架后记得补齐</strong> - iOS App Store 下载链接，用于 App
+            Association 配置。安卓下载链接会自动生成，无需添加。
           </div>
         </el-form-item>
 
@@ -649,10 +865,23 @@
 
         <el-divider content-position="left">证书配置</el-divider>
         <el-form-item label="iOS 发布证书 (.p12)">
-          <div style="display: flex; align-items: flex-start; gap: 20px;">
-            <div v-if="editP12File || editP12FileName || editP12Exists" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6;">
-              <el-icon style="color: #67c23a;"><Document /></el-icon>
-              <span style="font-size: 14px;">{{ editP12FileName || 'app.p12' }}</span>
+          <div style="display: flex; align-items: flex-start; gap: 20px">
+            <div
+              v-if="editP12File || editP12FileName || editP12Exists"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 12px;
+                background: #f5f7fa;
+                border-radius: 4px;
+                border: 1px solid #dcdfe6;
+              "
+            >
+              <el-icon style="color: #67c23a"><Document /></el-icon>
+              <span style="font-size: 14px">{{
+                editP12FileName || "app.p12"
+              }}</span>
               <el-button
                 type="danger"
                 :icon="Delete"
@@ -662,10 +891,20 @@
                 title="删除证书"
               />
             </div>
-            <div v-else style="padding: 8px 12px; background: #fafafa; border: 1px dashed #dcdfe6; border-radius: 4px; color: #909399; font-size: 14px;">
+            <div
+              v-else
+              style="
+                padding: 8px 12px;
+                background: #fafafa;
+                border: 1px dashed #dcdfe6;
+                border-radius: 4px;
+                color: #909399;
+                font-size: 14px;
+              "
+            >
               暂无证书
             </div>
-            <div style="flex: 1;">
+            <div style="flex: 1">
               <el-upload
                 ref="editP12UploadRef"
                 :auto-upload="false"
@@ -682,9 +921,12 @@
                   </el-button>
                 </template>
               </el-upload>
-              <div class="form-tip" style="margin-top: 8px;">
+              <div class="form-tip" style="margin-top: 8px">
                 <el-icon><InfoFilled /></el-icon>
-                上传 iOS 发布证书文件，将自动重命名为 app.p12。<strong style="color: #e6a23c;">打包时必填项</strong>
+                上传 iOS 发布证书文件，将自动重命名为 app.p12。<strong
+                  style="color: #e6a23c"
+                  >打包时必填项</strong
+                >
                 <el-link
                   href="https://doc.weixin.qq.com/doc/w3_AHwA9AboAOcCNvWD6OtO3QuOfv211?scode=AMkAYwc4AAwexSOiUVAHwA9AboAOc"
                   target="_blank"
@@ -699,10 +941,27 @@
         </el-form-item>
 
         <el-form-item label="iOS 描述文件 (.mobileprovision)">
-          <div style="display: flex; align-items: flex-start; gap: 20px;">
-            <div v-if="editMobileprovisionFile || editMobileprovisionFileName || editMobileprovisionExists" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6;">
-              <el-icon style="color: #67c23a;"><Document /></el-icon>
-              <span style="font-size: 14px;">{{ editMobileprovisionFileName || 'app.mobileprovision' }}</span>
+          <div style="display: flex; align-items: flex-start; gap: 20px">
+            <div
+              v-if="
+                editMobileprovisionFile ||
+                editMobileprovisionFileName ||
+                editMobileprovisionExists
+              "
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 12px;
+                background: #f5f7fa;
+                border-radius: 4px;
+                border: 1px solid #dcdfe6;
+              "
+            >
+              <el-icon style="color: #67c23a"><Document /></el-icon>
+              <span style="font-size: 14px">{{
+                editMobileprovisionFileName || "app.mobileprovision"
+              }}</span>
               <el-button
                 type="danger"
                 :icon="Delete"
@@ -712,10 +971,20 @@
                 title="删除描述文件"
               />
             </div>
-            <div v-else style="padding: 8px 12px; background: #fafafa; border: 1px dashed #dcdfe6; border-radius: 4px; color: #909399; font-size: 14px;">
+            <div
+              v-else
+              style="
+                padding: 8px 12px;
+                background: #fafafa;
+                border: 1px dashed #dcdfe6;
+                border-radius: 4px;
+                color: #909399;
+                font-size: 14px;
+              "
+            >
               暂无描述文件
             </div>
-            <div style="flex: 1;">
+            <div style="flex: 1">
               <el-upload
                 ref="editMobileprovisionUploadRef"
                 :auto-upload="false"
@@ -732,9 +1001,12 @@
                   </el-button>
                 </template>
               </el-upload>
-              <div class="form-tip" style="margin-top: 8px;">
+              <div class="form-tip" style="margin-top: 8px">
                 <el-icon><InfoFilled /></el-icon>
-                上传 iOS 描述文件，将自动重命名为 app.mobileprovision。<strong style="color: #e6a23c;">打包时必填项</strong>
+                上传 iOS 描述文件，将自动重命名为 app.mobileprovision。<strong
+                  style="color: #e6a23c"
+                  >打包时必填项</strong
+                >
                 <el-link
                   href="https://doc.weixin.qq.com/doc/w3_AHwA9AboAOcCNvWD6OtO3QuOfv211?scode=AMkAYwc4AAwexSOiUVAHwA9AboAOc"
                   target="_blank"
@@ -749,40 +1021,47 @@
         </el-form-item>
 
         <el-form-item label="功能开关">
-          <el-table :data="[
-            { 
-              key: 'isSupportEnterprise', 
-              name: '支持企业包', 
-              description: '是否支持企业版应用',
-              checked: editingConfig.isSupportEnterprise,
-              disabled: false
-            },
-            { 
-              key: 'isTest', 
-              name: '测试环境', 
-              description: '是否是测试环境（已与 API 地区绑定，选择测试环境时自动勾选，不可手动修改）',
-              checked: editingConfig.isTest,
-              disabled: true
-            },
-            { 
-              key: 'isSupportHotUpdate', 
-              name: '支持热更新', 
-              description: '是否支持代码热更新功能',
-              checked: editingConfig.isSupportHotUpdate,
-              disabled: false
-            },
-            { 
-              key: 'isSupportAppSetting', 
-              name: '支持应用设置', 
-              description: '是否支持应用设置功能',
-              checked: editingConfig.isSupportAppSetting,
-              disabled: !isEditRestosuiteOnlinePro,
-              warning: !isEditRestosuiteOnlinePro ? '仅预生产环境（RestosuiteOnlinePro）可勾选，生产app不能勾选' : null
-            }
-          ]" border style="width: 100%;">
+          <el-table
+            :data="[
+              {
+                key: 'isSupportEnterprise',
+                name: '支持企业包',
+                description: '是否支持企业版应用',
+                checked: editingConfig.isSupportEnterprise,
+                disabled: false,
+              },
+              {
+                key: 'isTest',
+                name: '测试环境',
+                description:
+                  '是否是测试环境（已与 API 地区绑定，选择测试环境时自动勾选，不可手动修改）',
+                checked: editingConfig.isTest,
+                disabled: true,
+              },
+              {
+                key: 'isSupportHotUpdate',
+                name: '支持热更新',
+                description: '是否支持代码热更新功能',
+                checked: editingConfig.isSupportHotUpdate,
+                disabled: false,
+              },
+              {
+                key: 'isSupportAppSetting',
+                name: '支持应用设置',
+                description: '是否支持应用设置功能',
+                checked: editingConfig.isSupportAppSetting,
+                disabled: !isEditRestosuiteOnlinePro,
+                warning: !isEditRestosuiteOnlinePro
+                  ? '仅预生产环境（RestosuiteOnlinePro）可勾选，生产app不能勾选'
+                  : null,
+              },
+            ]"
+            border
+            style="width: 100%"
+          >
             <el-table-column label="启用" width="80" align="center">
               <template #default="{ row }">
-                <el-checkbox 
+                <el-checkbox
                   v-model="editingConfig[row.key]"
                   :disabled="row.disabled"
                 />
@@ -791,17 +1070,17 @@
             <el-table-column label="功能名称" prop="name" width="150" />
             <el-table-column label="说明">
               <template #default="{ row }">
-                <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; flex-direction: column; gap: 8px">
                   <span>{{ row.description }}</span>
                   <el-alert
                     v-if="row.warning"
                     type="warning"
                     :closable="false"
                     show-icon
-                    style="margin-top: 4px;"
+                    style="margin-top: 4px"
                   >
                     <template #title>
-                      <span style="font-size: 12px;">
+                      <span style="font-size: 12px">
                         <strong>{{ row.warning }}</strong>
                       </span>
                     </template>
@@ -814,21 +1093,34 @@
 
         <el-divider content-position="left">其他文件</el-divider>
         <el-form-item label="其他文件">
-          <div style="width: 100%;">
-            <div v-if="editOtherFiles.length > 0" style="margin-bottom: 12px;">
-              <div 
-                v-for="(file, index) in editOtherFiles" 
+          <div style="width: 100%">
+            <div v-if="editOtherFiles.length > 0" style="margin-bottom: 12px">
+              <div
+                v-for="(file, index) in editOtherFiles"
                 :key="index"
-                style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border-radius: 4px; border: 1px solid #dcdfe6; margin-bottom: 8px;"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  padding: 8px 12px;
+                  background: #f5f7fa;
+                  border-radius: 4px;
+                  border: 1px solid #dcdfe6;
+                  margin-bottom: 8px;
+                "
               >
-                <el-icon style="color: #67c23a;"><Document /></el-icon>
-                <span style="font-size: 14px; flex: 1;">{{ file.filename || file.name }}</span>
+                <el-icon style="color: #67c23a"><Document /></el-icon>
+                <span style="font-size: 14px; flex: 1">{{
+                  file.filename || file.name
+                }}</span>
                 <el-button
                   type="danger"
                   :icon="Delete"
                   circle
                   size="small"
-                  @click="removeEditOtherFile(index, file.filename || file.name)"
+                  @click="
+                    removeEditOtherFile(index, file.filename || file.name)
+                  "
                   title="删除文件"
                 />
               </div>
@@ -848,9 +1140,14 @@
                 </el-button>
               </template>
             </el-upload>
-            <div class="form-tip" style="margin-top: 8px;">
+            <div class="form-tip" style="margin-top: 8px">
               <el-icon><InfoFilled /></el-icon>
-              上传其他文件到 <code>appConfig/{{ editingConfig?.alias || '品牌别名' }}/other/</code> 目录，用于存放如 AuthKey、google-services.json 等配置文件。支持上传多个文件，文件类型不限。
+              上传其他文件到
+              <code
+                >appConfig/{{ editingConfig?.alias || "品牌别名" }}/other/</code
+              >
+              目录，用于存放如 AuthKey、google-services.json
+              等配置文件。支持上传多个文件，文件类型不限。
             </div>
           </div>
         </el-form-item>
@@ -870,52 +1167,76 @@
       title="确认生成云函数"
       width="600px"
     >
-      <div style="line-height: 1.8;">
+      <div style="line-height: 1.8">
         <p><strong>确定要生成云函数吗？</strong></p>
-        <p style="color: #e6a23c; margin-top: 15px; margin-bottom: 10px;">
+        <p style="color: #e6a23c; margin-top: 15px; margin-bottom: 10px">
           <strong>部署说明：</strong>
         </p>
-        <ol style="margin: 10px 0; padding-left: 25px; color: #606266;">
+        <ol style="margin: 10px 0; padding-left: 25px; color: #606266">
           <li>
-            开通 UniPush，详细文档见 <el-link href="https://restosuite.sg.larksuite.com/wiki/ILRgwwouTiR12ykrmuGlmNhMgQd" target="_blank" type="primary">UniPush 开通文档</el-link>
+            开通 UniPush，详细文档见
+            <el-link
+              href="https://restosuite.sg.larksuite.com/wiki/ILRgwwouTiR12ykrmuGlmNhMgQd"
+              target="_blank"
+              type="primary"
+              >UniPush 开通文档</el-link
+            >
           </li>
           <li>
             在 HBuilderX 中打开 uniCloud-tcb 项目
-            <el-popover
-              placement="bottom"
-              :width="800"
-              trigger="hover"
-            >
+            <el-popover placement="bottom" :width="800" trigger="hover">
               <template #reference>
-                <el-link type="primary" style="margin-left: 4px; cursor: pointer;">（查看示例图）</el-link>
+                <el-link
+                  type="primary"
+                  style="margin-left: 4px; cursor: pointer"
+                  >（查看示例图）</el-link
+                >
               </template>
-              <div style="text-align: center;">
-                <img 
-                  src="/hbuilderx-tip.png" 
-                  alt="HBuilderX 打开项目示例" 
-                  style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
+              <div style="text-align: center">
+                <img
+                  src="/hbuilderx-tip.png"
+                  alt="HBuilderX 打开项目示例"
+                  style="
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 4px;
+                    display: block;
+                  "
                 />
               </div>
             </el-popover>
           </li>
           <li>右键需要部署的云函数文件夹</li>
           <li>选择"上传部署"或"上传部署（云端安装依赖）"</li>
-          <li>部署完成后，请前往 <el-link href="https://unicloud.dcloud.net.cn/pages/cloud-function/cloud-function?pageid=tcb-7wzhyxm37yebmba-9cj051c3b56a" target="_blank" type="primary">云函数编辑地址</el-link></li>
+          <li>
+            部署完成后，请前往
+            <el-link
+              href="https://unicloud.dcloud.net.cn/pages/cloud-function/cloud-function?pageid=tcb-7wzhyxm37yebmba-9cj051c3b56a"
+              target="_blank"
+              type="primary"
+              >云函数编辑地址</el-link
+            >
+          </li>
           <li>
             编辑成功后通知志伟新增
-            <el-popover
-              placement="top"
-              :width="800"
-              trigger="hover"
-            >
+            <el-popover placement="top" :width="800" trigger="hover">
               <template #reference>
-                <el-link type="primary" style="margin-left: 4px; cursor: pointer;">（查看示例图）</el-link>
+                <el-link
+                  type="primary"
+                  style="margin-left: 4px; cursor: pointer"
+                  >（查看示例图）</el-link
+                >
               </template>
-              <div style="text-align: center;">
-                <img 
-                  src="/cloud-function-tip.png" 
-                  alt="云函数编辑示例" 
-                  style="max-width: 100%; height: auto; border-radius: 4px; display: block;"
+              <div style="text-align: center">
+                <img
+                  src="/cloud-function-tip.png"
+                  alt="云函数编辑示例"
+                  style="
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 4px;
+                    display: block;
+                  "
                 />
               </div>
             </el-popover>
@@ -923,8 +1244,12 @@
         </ol>
       </div>
       <template #footer>
-        <el-button @click="generateUnipushDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmGenerateUnipush">确定生成</el-button>
+        <el-button @click="generateUnipushDialogVisible = false"
+          >取消</el-button
+        >
+        <el-button type="primary" @click="confirmGenerateUnipush"
+          >确定生成</el-button
+        >
       </template>
     </el-dialog>
 
@@ -943,14 +1268,16 @@
             :closable="false"
             style="margin-bottom: 20px"
           />
-          
+
           <el-descriptions :column="1" border>
             <el-descriptions-item label="别名">
-              {{ keystoreInfo.info?.alias || '-' }}
+              {{ keystoreInfo.info?.alias || "-" }}
             </el-descriptions-item>
             <el-descriptions-item label="SHA1">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-family: monospace; word-break: break-all;">{{ keystoreInfo.info?.sha1 || '-' }}</span>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span style="font-family: monospace; word-break: break-all">{{
+                  keystoreInfo.info?.sha1 || "-"
+                }}</span>
                 <el-button
                   v-if="keystoreInfo.info?.sha1"
                   type="primary"
@@ -963,8 +1290,10 @@
               </div>
             </el-descriptions-item>
             <el-descriptions-item label="SHA256">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-family: monospace; word-break: break-all;">{{ keystoreInfo.info?.sha256 || '-' }}</span>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span style="font-family: monospace; word-break: break-all">{{
+                  keystoreInfo.info?.sha256 || "-"
+                }}</span>
                 <el-button
                   v-if="keystoreInfo.info?.sha256"
                   type="primary"
@@ -977,8 +1306,10 @@
               </div>
             </el-descriptions-item>
             <el-descriptions-item label="MD5">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-family: monospace; word-break: break-all;">{{ keystoreInfo.info?.md5 || '-' }}</span>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span style="font-family: monospace; word-break: break-all">{{
+                  keystoreInfo.info?.md5 || "-"
+                }}</span>
                 <el-button
                   v-if="keystoreInfo.info?.md5"
                   type="primary"
@@ -991,37 +1322,43 @@
               </div>
             </el-descriptions-item>
             <el-descriptions-item label="所有者">
-              {{ keystoreInfo.info?.owner || '-' }}
+              {{ keystoreInfo.info?.owner || "-" }}
             </el-descriptions-item>
             <el-descriptions-item label="颁发者">
-              {{ keystoreInfo.info?.issuer || '-' }}
+              {{ keystoreInfo.info?.issuer || "-" }}
             </el-descriptions-item>
             <el-descriptions-item label="有效期开始">
-              {{ keystoreInfo.info?.validFrom || '-' }}
+              {{ keystoreInfo.info?.validFrom || "-" }}
             </el-descriptions-item>
             <el-descriptions-item label="有效期结束">
-              {{ keystoreInfo.info?.validUntil || '-' }}
+              {{ keystoreInfo.info?.validUntil || "-" }}
             </el-descriptions-item>
           </el-descriptions>
 
           <el-divider>完整信息</el-divider>
           <el-card>
-            <pre style="max-height: 400px; overflow: auto; font-size: 12px; line-height: 1.5;">{{ keystoreInfo.info?.raw || '-' }}</pre>
+            <pre
+              style="
+                max-height: 400px;
+                overflow: auto;
+                font-size: 12px;
+                line-height: 1.5;
+              "
+              >{{ keystoreInfo.info?.raw || "-" }}</pre
+            >
           </el-card>
         </div>
-        <div v-else-if="keystoreError" style="text-align: center; padding: 40px;">
-          <el-alert
-            :title="keystoreError"
-            type="error"
-            :closable="false"
-          />
+        <div
+          v-else-if="keystoreError"
+          style="text-align: center; padding: 40px"
+        >
+          <el-alert :title="keystoreError" type="error" :closable="false" />
         </div>
-        <div v-else-if="!keystoreLoading" style="text-align: center; padding: 40px;">
-          <el-alert
-            title="暂无数据"
-            type="info"
-            :closable="false"
-          />
+        <div
+          v-else-if="!keystoreLoading"
+          style="text-align: center; padding: 40px"
+        >
+          <el-alert title="暂无数据" type="info" :closable="false" />
         </div>
       </div>
     </el-dialog>
@@ -1045,7 +1382,9 @@
 
         <el-form-item label="环境">
           <el-tag :type="getRegionTagType(cloudBuildForm.environment)">
-            {{ cloudBuildForm.environment === 'test' ? '测试环境' : '生产环境' }}
+            {{
+              cloudBuildForm.environment === "test" ? "测试环境" : "生产环境"
+            }}
           </el-tag>
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
@@ -1057,35 +1396,39 @@
         <el-form-item label="版本号" prop="versionName">
           <el-input v-model="cloudBuildForm.versionName" placeholder="1.0.0" />
         </el-form-item>
-        <el-form-item 
+        <el-form-item
           v-if="cloudBuildForm.platform === 'android'"
           label="Android 构建号"
           prop="nextAndroidVersionCode"
         >
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="color: #909399; font-size: 12px;">当前: {{ cloudBuildForm.androidVersionCode || '-' }}</span>
-            <span style="color: #909399;">→</span>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span style="color: #909399; font-size: 12px"
+              >当前: {{ cloudBuildForm.androidVersionCode || "-" }}</span
+            >
+            <span style="color: #909399">→</span>
             <el-input-number
               v-model="cloudBuildForm.nextAndroidVersionCode"
               :min="1"
               :precision="0"
-              style="width: 150px;"
+              style="width: 150px"
             />
           </div>
         </el-form-item>
-        <el-form-item 
+        <el-form-item
           v-if="cloudBuildForm.platform === 'ios'"
           label="iOS 构建号"
           prop="nextIosVersionCode"
         >
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="color: #909399; font-size: 12px;">当前: {{ cloudBuildForm.iosVersionCode || '-' }}</span>
-            <span style="color: #909399;">→</span>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span style="color: #909399; font-size: 12px"
+              >当前: {{ cloudBuildForm.iosVersionCode || "-" }}</span
+            >
+            <span style="color: #909399">→</span>
             <el-input-number
               v-model="cloudBuildForm.nextIosVersionCode"
               :min="1"
               :precision="0"
-              style="width: 150px;"
+              style="width: 150px"
             />
           </div>
         </el-form-item>
@@ -1093,13 +1436,13 @@
         <el-divider content-position="left">打包配置</el-divider>
 
         <el-form-item label="Git 分支" prop="branch">
-          <el-select 
-            v-model="cloudBuildForm.branch" 
+          <el-select
+            v-model="cloudBuildForm.branch"
             placeholder="请选择分支"
             filterable
             :loading="branchesLoading"
             @focus="loadBranches"
-            style="width: 100%;"
+            style="width: 100%"
           >
             <el-option
               v-for="branch in branches"
@@ -1107,7 +1450,10 @@
               :label="branch"
               :value="branch"
             >
-              <span v-if="branch === currentBranch" style="color: #409eff; font-weight: 500;">
+              <span
+                v-if="branch === currentBranch"
+                style="color: #409eff; font-weight: 500"
+              >
                 {{ branch }} (当前)
               </span>
               <span v-else>{{ branch }}</span>
@@ -1120,7 +1466,10 @@
         </el-form-item>
 
         <el-form-item label="平台" prop="platform">
-          <el-radio-group v-model="cloudBuildForm.platform" @change="handlePlatformChange">
+          <el-radio-group
+            v-model="cloudBuildForm.platform"
+            @change="handlePlatformChange"
+          >
             <el-radio label="android">Android</el-radio>
             <el-radio label="ios">iOS</el-radio>
           </el-radio-group>
@@ -1129,13 +1478,19 @@
         <el-form-item label="操作类型" prop="operation">
           <el-radio-group v-model="cloudBuildForm.operation">
             <el-radio label="cloudbuild">云打包</el-radio>
-            <el-radio v-if="cloudBuildForm.isSupportHotUpdate" label="wgt">制作wgt文件</el-radio>
+            <el-radio v-if="cloudBuildForm.isSupportHotUpdate" label="wgt"
+              >制作wgt文件</el-radio
+            >
           </el-radio-group>
           <div class="form-tip">
             <el-icon><InfoFilled /></el-icon>
-            云打包：完整的云打包流程（包含上传蒲公英、转apk等）<br>
-            <span v-if="cloudBuildForm.isSupportHotUpdate">制作wgt文件：仅生成wgt文件到downloads目录</span>
-            <span v-else style="color: #909399;">该品牌不支持热更新，仅支持云打包</span>
+            云打包：完整的云打包流程（包含上传蒲公英、转apk等）<br />
+            <span v-if="cloudBuildForm.isSupportHotUpdate"
+              >制作wgt文件：仅生成wgt文件到downloads目录</span
+            >
+            <span v-else style="color: #909399"
+              >该品牌不支持热更新，仅支持云打包</span
+            >
           </div>
         </el-form-item>
 
@@ -1159,7 +1514,11 @@
 
       <template #footer>
         <el-button @click="closeCloudBuildDialog">取消</el-button>
-        <el-button type="primary" :loading="cloudBuildLoading" @click="confirmCloudBuild">
+        <el-button
+          type="primary"
+          :loading="cloudBuildLoading"
+          @click="confirmCloudBuild"
+        >
           开始打包
         </el-button>
       </template>
@@ -1240,9 +1599,10 @@
               </el-button>
             </template>
           </el-upload>
-          <div class="form-tip" style="margin-top: 8px;">
+          <div class="form-tip" style="margin-top: 8px">
             <el-icon><InfoFilled /></el-icon>
-            请选择要转换的 AAB 文件。转换需要使用品牌配置中的 keystore 文件进行签名。
+            请选择要转换的 AAB 文件。转换需要使用品牌配置中的 keystore
+            文件进行签名。
           </div>
         </el-form-item>
 
@@ -1251,15 +1611,15 @@
           :title="convertAABError"
           type="error"
           :closable="false"
-          style="margin-bottom: 15px;"
+          style="margin-bottom: 15px"
         />
       </el-form>
 
       <template #footer>
         <el-button @click="closeConvertAABDialog">取消</el-button>
-        <el-button 
-          type="primary" 
-          :loading="convertAABLoading" 
+        <el-button
+          type="primary"
+          :loading="convertAABLoading"
           :disabled="!convertAABForm.aabFile"
           @click="confirmConvertAAB"
         >
@@ -1267,66 +1627,200 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 消息推送测试对话框 -->
+    <el-dialog
+      v-model="testPushDialogVisible"
+      title="消息推送测试"
+      width="600px"
+      :before-close="closeTestPushDialog"
+    >
+      <el-form ref="testPushFormRef" :model="testPushForm" label-width="120px">
+        <el-form-item label="品牌别名">
+          <el-input v-model="testPushForm.alias" readonly disabled />
+        </el-form-item>
+
+        <el-form-item label="标题 (title)" required>
+          <el-input
+            v-model="testPushForm.title"
+            placeholder="请输入推送标题"
+            clearable
+          />
+        </el-form-item>
+
+        <el-form-item label="内容 (content)" required>
+          <el-input
+            v-model="testPushForm.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入推送内容"
+            clearable
+          />
+        </el-form-item>
+
+        <el-form-item label="CID" required>
+          <el-input
+            v-model="testPushForm.cid"
+            placeholder="请输入客户端 ID (cid)"
+            clearable
+          />
+          <div class="form-tip" style="margin-top: 8px">
+            <el-icon><InfoFilled /></el-icon>
+            客户端 ID，用于标识接收推送的设备。请长按上划 app 订单标题三秒后获取
+            cid
+          </div>
+        </el-form-item>
+
+        <el-form-item label="页面路径 (page)">
+          <el-input
+            v-model="testPushForm.page"
+            placeholder="请输入页面路径（可选）"
+            clearable
+          />
+          <div class="form-tip" style="margin-top: 8px">
+            <el-icon><InfoFilled /></el-icon>
+            默认: /subPackages/order/detail/index?orderId=1990968933033046098
+          </div>
+        </el-form-item>
+
+        <el-alert
+          v-if="testPushError"
+          :title="testPushError"
+          type="error"
+          :closable="false"
+          style="margin-bottom: 15px"
+        />
+      </el-form>
+
+      <template #footer>
+        <el-button @click="closeTestPushDialog">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="testPushLoading"
+          :disabled="
+            !testPushForm.title || !testPushForm.content || !testPushForm.cid
+          "
+          @click="confirmTestPush"
+        >
+          发送推送
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed, watch, nextTick } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Upload, DocumentCopy, UploadFilled, Delete, InfoFilled, Document, Search, List, Grid, Setting, Picture, Loading, Link, WarningFilled } from '@element-plus/icons-vue';
-import axios from 'axios';
+import { ref, onMounted, reactive, computed, watch, nextTick } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import {
+  Upload,
+  DocumentCopy,
+  UploadFilled,
+  Delete,
+  InfoFilled,
+  Document,
+  Search,
+  List,
+  Grid,
+  Setting,
+  Picture,
+  Loading,
+  Link,
+  WarningFilled,
+} from "@element-plus/icons-vue";
+import axios from "axios";
 
 const props = defineProps({
   userRole: {
     type: String,
-    default: 'developer' // 'developer' 或 'tester'
-  }
+    default: "developer", // 'developer' 或 'tester'
+  },
 });
 
-const isDeveloper = computed(() => props.userRole === 'developer');
-const isTester = computed(() => props.userRole === 'tester');
+const isDeveloper = computed(() => props.userRole === "developer");
+const isTester = computed(() => props.userRole === "tester");
 
 const loading = ref(false);
 const configs = ref([]);
-const viewMode = ref('list'); // 'list' 或 'card'
-const searchText = ref('');
-const filterRegion = ref('');
+const viewMode = ref("list"); // 'list' 或 'card'
+const searchText = ref("");
+const filterRegion = ref("");
 const showFieldConfigDialog = ref(false);
 const selectedFields = ref([]);
 
 // 所有可用字段定义
 const allFields = [
-  { key: 'logoExists', label: 'Logo', width: 100, default: true },
-  { key: 'baseUrlRegion', label: '环境', width: 120, default: true },
-  { key: 'alias', label: '品牌别名', width: 150, default: true },
-  { key: 'appName', label: '应用名称', minWidth: 150, default: true },
-  { key: 'appEnName', label: '应用英文名', minWidth: 150, default: true },
-  { key: 'appDescription', label: '描述', minWidth: 200, default: true },
-  { key: 'versionName', label: '版本号', width: 120, default: true },
-  { key: 'versionCode', label: '版本代码', width: 120, default: false },
-  { key: 'androidVersionCode', label: 'Android 构建号', width: 140, default: true },
-  { key: 'iosVersionCode', label: 'iOS 构建号', width: 120, default: true },
-  { key: 'dcAppId', label: 'DCloud App ID', minWidth: 150, default: true },
-  { key: 'packagename', label: 'Android 包名', minWidth: 180, default: false },
-  { key: 'iosAppId', label: 'iOS Bundle ID', minWidth: 180, default: true },
-  { key: 'appLinksuffix', label: 'App Link Suffix', minWidth: 150, default: false },
-  { key: 'schemes', label: 'Schemes', minWidth: 120, default: false },
-  { key: 'urltypes', label: 'URL Types', minWidth: 120, default: false },
-  { key: 'teamId', label: 'iOS Team ID', minWidth: 150, default: false },
-  { key: 'corporationId', label: '集团 ID', minWidth: 120, default: false },
-  { key: 'extAppId', label: '装修 ID', minWidth: 120, default: false },
-  { key: 'iosApplinksDomain', label: 'iOS App Links 域名', minWidth: 200, default: false },
-  { key: 'locale', label: '默认语言', width: 120, default: false },
-  { key: 'themeColor', label: '主题颜色', width: 120, default: false },
-  { key: 'iosDownloadUrl', label: 'iOS 下载链接', minWidth: 250, default: false },
-  { key: 'androidDownloadUrl', label: 'Android 下载链接', minWidth: 300, default: false },
-  { key: 'reviewAccount', label: '审核账号', minWidth: 150, default: false },
-  { key: 'reviewPassword', label: '审核密码', minWidth: 120, default: false },
-  { key: 'isSupportEnterprise', label: '支持企业包', width: 120, default: false },
-  { key: 'isTest', label: '测试环境', width: 100, default: false },
-  { key: 'isSupportHotUpdate', label: '支持热更新', width: 120, default: false },
-  { key: 'isSupportAppSetting', label: '支持应用设置', width: 120, default: false },
-  { key: 'createdAt', label: '创建时间', width: 180, default: true }
+  { key: "logoExists", label: "Logo", width: 100, default: true },
+  { key: "baseUrlRegion", label: "环境", width: 120, default: true },
+  { key: "alias", label: "品牌别名", width: 150, default: true },
+  { key: "appName", label: "应用名称", minWidth: 150, default: true },
+  { key: "appEnName", label: "应用英文名", minWidth: 150, default: true },
+  { key: "appDescription", label: "描述", minWidth: 200, default: true },
+  { key: "versionName", label: "版本号", width: 120, default: true },
+  { key: "versionCode", label: "版本代码", width: 120, default: false },
+  {
+    key: "androidVersionCode",
+    label: "Android 构建号",
+    width: 140,
+    default: true,
+  },
+  { key: "iosVersionCode", label: "iOS 构建号", width: 120, default: true },
+  { key: "dcAppId", label: "DCloud App ID", minWidth: 150, default: true },
+  { key: "packagename", label: "Android 包名", minWidth: 180, default: false },
+  { key: "iosAppId", label: "iOS Bundle ID", minWidth: 180, default: true },
+  {
+    key: "appLinksuffix",
+    label: "App Link Suffix",
+    minWidth: 150,
+    default: false,
+  },
+  { key: "schemes", label: "Schemes", minWidth: 120, default: false },
+  { key: "urltypes", label: "URL Types", minWidth: 120, default: false },
+  { key: "teamId", label: "iOS Team ID", minWidth: 150, default: false },
+  { key: "corporationId", label: "集团 ID", minWidth: 120, default: false },
+  { key: "extAppId", label: "装修 ID", minWidth: 120, default: false },
+  {
+    key: "iosApplinksDomain",
+    label: "iOS App Links 域名",
+    minWidth: 200,
+    default: false,
+  },
+  { key: "locale", label: "默认语言", width: 120, default: false },
+  { key: "themeColor", label: "主题颜色", width: 120, default: false },
+  {
+    key: "iosDownloadUrl",
+    label: "iOS 下载链接",
+    minWidth: 250,
+    default: false,
+  },
+  {
+    key: "androidDownloadUrl",
+    label: "Android 下载链接",
+    minWidth: 300,
+    default: false,
+  },
+  { key: "reviewAccount", label: "审核账号", minWidth: 150, default: false },
+  { key: "reviewPassword", label: "审核密码", minWidth: 120, default: false },
+  {
+    key: "isSupportEnterprise",
+    label: "支持企业包",
+    width: 120,
+    default: false,
+  },
+  { key: "isTest", label: "测试环境", width: 100, default: false },
+  {
+    key: "isSupportHotUpdate",
+    label: "支持热更新",
+    width: 120,
+    default: false,
+  },
+  {
+    key: "isSupportAppSetting",
+    label: "支持应用设置",
+    width: 120,
+    default: false,
+  },
+  { key: "createdAt", label: "创建时间", width: 180, default: true },
 ];
 
 // 默认显示的字段
@@ -1334,18 +1828,20 @@ const defaultFields = allFields.filter(f => f.default).map(f => f.key);
 
 // 初始化选中的字段（从 localStorage 读取或使用默认值）
 const initSelectedFields = () => {
-  const saved = localStorage.getItem('configListSelectedFields');
+  const saved = localStorage.getItem("configListSelectedFields");
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
       // 验证字段是否有效
-      const validFields = parsed.filter(f => allFields.some(af => af.key === f));
+      const validFields = parsed.filter(f =>
+        allFields.some(af => af.key === f)
+      );
       if (validFields.length > 0) {
         selectedFields.value = validFields;
         return;
       }
     } catch (e) {
-      console.error('Failed to parse saved fields:', e);
+      console.error("Failed to parse saved fields:", e);
     }
   }
   selectedFields.value = [...defaultFields];
@@ -1369,30 +1865,30 @@ const visibleFieldsMap = computed(() => {
 
 // 计算属性：判断编辑的配置是否是 RestosuiteOnlinePro
 const isEditRestosuiteOnlinePro = computed(() => {
-  return editingConfig.value?.alias === 'RestosuiteOnlinePro';
+  return editingConfig.value?.alias === "RestosuiteOnlinePro";
 });
 
 // 环境选项
 const regionOptions = [
-  { label: '美国 (US)', value: 'us' },
-  { label: '东南亚 (SEA)', value: 'sea' },
-  { label: '欧洲 (EU)', value: 'eu' },
-  { label: '测试环境 (TEST)', value: 'test' }
+  { label: "美国 (US)", value: "us" },
+  { label: "东南亚 (SEA)", value: "sea" },
+  { label: "欧洲 (EU)", value: "eu" },
+  { label: "测试环境 (TEST)", value: "test" },
 ];
 
 // 获取环境标签类型
-const getRegionTagType = (region) => {
+const getRegionTagType = region => {
   const typeMap = {
-    us: 'success',
-    sea: 'primary',
-    eu: 'warning',
-    test: 'danger'
+    us: "success",
+    sea: "primary",
+    eu: "warning",
+    test: "danger",
   };
-  return typeMap[region] || 'info';
+  return typeMap[region] || "info";
 };
 
 // 获取环境标签文本
-const getRegionLabel = (region) => {
+const getRegionLabel = region => {
   const option = regionOptions.find(r => r.value === region);
   return option ? option.label : region;
 };
@@ -1409,18 +1905,23 @@ const filteredConfigs = computed(() => {
         (config.alias && config.alias.toLowerCase().includes(search)) ||
         (config.appName && config.appName.toLowerCase().includes(search)) ||
         (config.appEnName && config.appEnName.toLowerCase().includes(search)) ||
-        (config.appDescription && config.appDescription.toLowerCase().includes(search)) ||
+        (config.appDescription &&
+          config.appDescription.toLowerCase().includes(search)) ||
         (config.dcAppId && config.dcAppId.toLowerCase().includes(search)) ||
-        (config.packagename && config.packagename.toLowerCase().includes(search)) ||
+        (config.packagename &&
+          config.packagename.toLowerCase().includes(search)) ||
         (config.iosAppId && config.iosAppId.toLowerCase().includes(search)) ||
-        (config.baseUrlRegion && config.baseUrlRegion.toLowerCase().includes(search))
+        (config.baseUrlRegion &&
+          config.baseUrlRegion.toLowerCase().includes(search))
       );
     });
   }
 
   // 环境过滤
   if (filterRegion.value) {
-    result = result.filter(config => config.baseUrlRegion === filterRegion.value);
+    result = result.filter(
+      config => config.baseUrlRegion === filterRegion.value
+    );
   }
 
   return result;
@@ -1434,32 +1935,35 @@ const handleSearch = () => {
 // 保存字段配置
 const saveFieldConfig = () => {
   if (selectedFields.value.length === 0) {
-    ElMessage.warning('请至少选择一个字段');
+    ElMessage.warning("请至少选择一个字段");
     return;
   }
-  localStorage.setItem('configListSelectedFields', JSON.stringify(selectedFields.value));
+  localStorage.setItem(
+    "configListSelectedFields",
+    JSON.stringify(selectedFields.value)
+  );
   showFieldConfigDialog.value = false;
-  ElMessage.success('字段配置已保存');
+  ElMessage.success("字段配置已保存");
 };
 
 // 全选字段
 const selectAllFields = () => {
   selectedFields.value = allFields.map(f => f.key);
-  ElMessage.info('已全选所有字段');
+  ElMessage.info("已全选所有字段");
 };
 
 // 重置字段配置
 const resetFieldConfig = () => {
   selectedFields.value = [...defaultFields];
-  ElMessage.info('已恢复为默认字段');
+  ElMessage.info("已恢复为默认字段");
 };
 
 // 处理图片加载错误
-const handleImageError = (event) => {
-  event.target.style.display = 'none';
+const handleImageError = event => {
+  event.target.style.display = "none";
   const placeholder = event.target.nextElementSibling;
   if (placeholder) {
-    placeholder.style.display = 'flex';
+    placeholder.style.display = "flex";
   }
 };
 const viewDialogVisible = ref(false);
@@ -1470,15 +1974,15 @@ const editFormRef = ref(null);
 const updating = ref(false);
 const editLogoUploadRef = ref(null);
 const editLogoFile = ref(null);
-const editLogoPreview = ref('');
-const editLogoUrl = ref('');
+const editLogoPreview = ref("");
+const editLogoUrl = ref("");
 const editP12UploadRef = ref(null);
 const editP12File = ref(null);
-const editP12FileName = ref('');
+const editP12FileName = ref("");
 const editP12Exists = ref(false);
 const editMobileprovisionUploadRef = ref(null);
 const editMobileprovisionFile = ref(null);
-const editMobileprovisionFileName = ref('');
+const editMobileprovisionFileName = ref("");
 const editMobileprovisionExists = ref(false);
 const editOtherFilesUploadRef = ref(null);
 const editOtherFiles = ref([]);
@@ -1486,22 +1990,22 @@ const editOtherFilesToDelete = ref([]);
 const generateUnipushDialogVisible = ref(false);
 const keystoreDialogVisible = ref(false);
 const keystoreInfo = ref(null);
-const keystoreError = ref('');
+const keystoreError = ref("");
 const keystoreLoading = ref(false);
 const cloudBuildDialogVisible = ref(false);
 const cloudBuildForm = ref({
-  alias: '',
-  platform: 'android',
-  environment: 'test',
-  operation: 'wgt',
-  userVersionDesc: '',
-  versionName: '',
-  androidVersionCode: '',
-  iosVersionCode: '',
+  alias: "",
+  platform: "android",
+  environment: "test",
+  operation: "wgt",
+  userVersionDesc: "",
+  versionName: "",
+  androidVersionCode: "",
+  iosVersionCode: "",
   nextAndroidVersionCode: null,
   nextIosVersionCode: null,
-  branch: '',
-  isSupportHotUpdate: false // 是否支持热更新
+  branch: "",
+  isSupportHotUpdate: false, // 是否支持热更新
 });
 const cloudBuildFormRef = ref(null);
 const cloudBuildLoading = ref(false);
@@ -1510,71 +2014,88 @@ const cloudBuildOutput = ref([]);
 const cloudBuildAbortController = ref(null);
 const cloudBuildOutputRef = ref(null);
 const branches = ref([]);
-const currentBranch = ref('');
+const currentBranch = ref("");
 const branchesLoading = ref(false);
 const cloudBuildRules = {};
 const convertAABDialogVisible = ref(false);
 const convertAABForm = ref({
-  alias: '',
-  aabFile: null
+  alias: "",
+  aabFile: null,
 });
 const convertAABFormRef = ref(null);
 const convertAABLoading = ref(false);
-const convertAABError = ref('');
+const convertAABError = ref("");
+
+// 消息推送测试相关
+const testPushDialogVisible = ref(false);
+const testPushForm = ref({
+  alias: "",
+  title: "",
+  content: "",
+  cid: "",
+  page: "/subPackages/order/detail/index?orderId=1990968933033046098",
+});
+const testPushFormRef = ref(null);
+const testPushLoading = ref(false);
+const testPushError = ref("");
 const aabUploadRef = ref(null);
 
 // API 地区选项（用于编辑表单）
 const editRegionOptions = [
-  { 
-    label: '美国 (US) - https://m.us.restosuite.ai', 
-    value: 'us',
-    applinksDomain: 'https://applinks.us.restosuite.ai'
+  {
+    label: "美国 (US) - https://m.us.restosuite.ai",
+    value: "us",
+    applinksDomain: "https://applinks.us.restosuite.ai",
   },
-  { 
-    label: '东南亚 (SEA) - https://m.sea.restosuite.ai', 
-    value: 'sea',
-    applinksDomain: 'https://applinks.sea.restosuite.ai'
+  {
+    label: "东南亚 (SEA) - https://m.sea.restosuite.ai",
+    value: "sea",
+    applinksDomain: "https://applinks.sea.restosuite.ai",
   },
-  { 
-    label: '欧洲 (EU) - https://m.eu.restosuite.ai', 
-    value: 'eu',
-    applinksDomain: 'https://applinks.eu.restosuite.ai'
+  {
+    label: "欧洲 (EU) - https://m.eu.restosuite.ai",
+    value: "eu",
+    applinksDomain: "https://applinks.eu.restosuite.ai",
   },
-  { 
-    label: '测试环境 (TEST) - https://m.test.restosuite.cn', 
-    value: 'test',
-    applinksDomain: 'https://applinks.test.restosuite.cn'
-  }
+  {
+    label: "测试环境 (TEST) - https://m.test.restosuite.cn",
+    value: "test",
+    applinksDomain: "https://applinks.test.restosuite.cn",
+  },
 ];
 
 // 加载配置列表
 const loadConfigs = async () => {
   try {
     loading.value = true;
-    const response = await axios.get('/api/configs');
+    const response = await axios.get("/api/configs");
     configs.value = response.data;
   } catch (error) {
-    ElMessage.error('加载配置列表失败: ' + (error.response?.data?.error || error.message));
+    ElMessage.error(
+      "加载配置列表失败: " + (error.response?.data?.error || error.message)
+    );
   } finally {
     loading.value = false;
   }
 };
 
 // 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return '-';
+const formatDate = dateString => {
+  if (!dateString) return "-";
   const date = new Date(dateString);
-  return date.toLocaleString('zh-CN');
+  return date.toLocaleString("zh-CN");
 };
 
 // 查看配置
-const viewConfig = async (alias) => {
+const viewConfig = async alias => {
   try {
     const response = await axios.get(`/api/configs/${alias}`);
     viewingConfig.value = response.data;
     viewDialogVisible.value = true;
   } catch (error) {
-    ElMessage.error('加载配置失败: ' + (error.response?.data?.error || error.message));
+    ElMessage.error(
+      "加载配置失败: " + (error.response?.data?.error || error.message)
+    );
   }
 };
 
@@ -1585,20 +2106,20 @@ const closeViewDialog = () => {
 };
 
 // 查看 Keystore 信息
-const viewKeystoreInfo = async (alias) => {
-  console.log('查看 keystore 信息:', alias);
+const viewKeystoreInfo = async alias => {
+  console.log("查看 keystore 信息:", alias);
   try {
     // 先打开对话框
     keystoreDialogVisible.value = true;
     keystoreLoading.value = true;
-    keystoreError.value = '';
+    keystoreError.value = "";
     keystoreInfo.value = null;
 
     const response = await axios.get(`/api/configs/${alias}/keystore`);
-    console.log('keystore 信息响应:', response);
-    console.log('response.data:', response.data);
-    console.log('response.status:', response.status);
-    
+    console.log("keystore 信息响应:", response);
+    console.log("response.data:", response.data);
+    console.log("response.status:", response.status);
+
     // 检查响应数据
     if (response.data) {
       if (response.data.success === true && response.data.info) {
@@ -1610,22 +2131,24 @@ const viewKeystoreInfo = async (alias) => {
         keystoreInfo.value = null;
       } else if (response.data.success === false) {
         // 明确标记为失败
-        keystoreError.value = response.data.error || '获取 keystore 信息失败';
+        keystoreError.value = response.data.error || "获取 keystore 信息失败";
         keystoreInfo.value = null;
       } else {
         // 数据格式不正确
-        console.error('数据格式不正确:', response.data);
-        keystoreError.value = '获取 keystore 信息失败：服务器返回的数据格式不正确。响应数据：' + JSON.stringify(response.data);
+        console.error("数据格式不正确:", response.data);
+        keystoreError.value =
+          "获取 keystore 信息失败：服务器返回的数据格式不正确。响应数据：" +
+          JSON.stringify(response.data);
         keystoreInfo.value = null;
       }
     } else {
-      keystoreError.value = '获取 keystore 信息失败：服务器未返回数据';
+      keystoreError.value = "获取 keystore 信息失败：服务器未返回数据";
       keystoreInfo.value = null;
     }
   } catch (error) {
-    console.error('获取 keystore 信息错误:', error);
-    console.error('error.response:', error.response);
-    
+    console.error("获取 keystore 信息错误:", error);
+    console.error("error.response:", error.response);
+
     if (error.response) {
       // 服务器返回了错误响应
       if (error.response.data && error.response.data.error) {
@@ -1635,7 +2158,7 @@ const viewKeystoreInfo = async (alias) => {
       }
     } else {
       // 网络错误或其他错误
-      keystoreError.value = '获取 keystore 信息失败：' + error.message;
+      keystoreError.value = "获取 keystore 信息失败：" + error.message;
     }
     keystoreInfo.value = null;
   } finally {
@@ -1647,63 +2170,67 @@ const viewKeystoreInfo = async (alias) => {
 const closeKeystoreDialog = () => {
   keystoreDialogVisible.value = false;
   keystoreInfo.value = null;
-  keystoreError.value = '';
+  keystoreError.value = "";
 };
 
 // 复制配置内容
 const copyConfig = async () => {
   if (!viewingConfig.value?.content) return;
-  
+
   try {
     await navigator.clipboard.writeText(viewingConfig.value.content);
-    ElMessage.success('已复制到剪贴板');
+    ElMessage.success("已复制到剪贴板");
   } catch (error) {
-    ElMessage.error('复制失败，请手动复制');
+    ElMessage.error("复制失败，请手动复制");
   }
 };
 
 // 删除配置
-const deleteConfig = async (alias) => {
+const deleteConfig = async alias => {
   try {
     await ElMessageBox.confirm(
       `确定要删除品牌配置 "${alias}" 吗？此操作将删除整个配置目录，包括所有相关文件（index.ts、keystore、logo、证书等），且无法恢复！`,
-      '确认删除',
+      "确认删除",
       {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
-        type: 'warning',
-        dangerouslyUseHTMLString: false
+        confirmButtonText: "确定删除",
+        cancelButtonText: "取消",
+        type: "warning",
+        dangerouslyUseHTMLString: false,
       }
     );
 
     const response = await axios.delete(`/api/configs/${alias}`);
-    ElMessage.success(response.data.message || '删除成功');
+    ElMessage.success(response.data.message || "删除成功");
     loadConfigs(); // 重新加载列表
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败: ' + (error.response?.data?.error || error.message));
+    if (error !== "cancel") {
+      ElMessage.error(
+        "删除失败: " + (error.response?.data?.error || error.message)
+      );
     }
   }
 };
 
 // 重新生成 Keystore
-const regenerateKeystore = async (alias) => {
+const regenerateKeystore = async alias => {
   try {
     await ElMessageBox.confirm(
       `确定要重新生成品牌 "${alias}" 的 keystore 文件吗？`,
-      '确认操作',
+      "确认操作",
       {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       }
     );
 
-    const response = await axios.post('/api/keystore', { alias });
-    ElMessage.success(response.data.message || 'Keystore 生成成功');
+    const response = await axios.post("/api/keystore", { alias });
+    ElMessage.success(response.data.message || "Keystore 生成成功");
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('生成失败: ' + (error.response?.data?.error || error.message));
+    if (error !== "cancel") {
+      ElMessage.error(
+        "生成失败: " + (error.response?.data?.error || error.message)
+      );
     }
   }
 };
@@ -1717,19 +2244,19 @@ const generateUnipush = () => {
 const confirmGenerateUnipush = async () => {
   try {
     generateUnipushDialogVisible.value = false;
-    ElMessage.info('正在生成云函数，请稍候...');
-    const response = await axios.post('/api/generate-unipush');
-    
+    ElMessage.info("正在生成云函数，请稍候...");
+    const response = await axios.post("/api/generate-unipush");
+
     if (response.data && response.data.success) {
-      ElMessage.success(response.data.message || '云函数生成成功');
+      ElMessage.success(response.data.message || "云函数生成成功");
     } else {
-      ElMessage.error(response.data?.error || '生成失败');
+      ElMessage.error(response.data?.error || "生成失败");
     }
   } catch (error) {
     const errorMsg = error.response?.data?.error || error.message;
-    ElMessage.error('生成失败: ' + errorMsg);
+    ElMessage.error("生成失败: " + errorMsg);
     if (error.response?.data?.output) {
-      console.error('命令输出:', error.response.data.output);
+      console.error("命令输出:", error.response.data.output);
     }
   }
 };
@@ -1737,9 +2264,11 @@ const confirmGenerateUnipush = async () => {
 // 生成 applinks（全局操作）
 const generateAppLinks = async () => {
   try {
-    const saturnUrl = 'https://saturn.restosuite.cn/metadata-project?metadata-project=/metadata/project/P01JBB1TJ7D5YJW1KBSNS57FAPA/cicd&saturn-cicd=%2Fsaturn%2Fservice%2FP01JBB1TJ7D5YJW1KBSNS57FAPA%2FS01JZ825GTMG0SR7JS463A1B355%2Fdetail';
-    const mAppAssociationUrl = 'https://git.restosuite.cn/online/m-app-association';
-    
+    const saturnUrl =
+      "https://saturn.restosuite.cn/metadata-project?metadata-project=/metadata/project/P01JBB1TJ7D5YJW1KBSNS57FAPA/cicd&saturn-cicd=%2Fsaturn%2Fservice%2FP01JBB1TJ7D5YJW1KBSNS57FAPA%2FS01JZ825GTMG0SR7JS463A1B355%2Fdetail";
+    const mAppAssociationUrl =
+      "https://git.restosuite.cn/online/m-app-association";
+
     await ElMessageBox.confirm(
       `<div style="line-height: 1.8;">
         <p><strong>确定要生成 applinks 吗？</strong></p>
@@ -1756,29 +2285,29 @@ const generateAppLinks = async () => {
           <li>生成时依赖该项目，请确保下载了 <a href="${mAppAssociationUrl}" target="_blank" style="color: #409eff; text-decoration: none;"><strong>m-app-association</strong></a> 项目，并且与当前项目平级</li>
         </ul>
       </div>`,
-      '确认生成 applinks',
+      "确认生成 applinks",
       {
-        confirmButtonText: '确定生成',
-        cancelButtonText: '取消',
-        type: 'warning',
-        dangerouslyUseHTMLString: true
+        confirmButtonText: "确定生成",
+        cancelButtonText: "取消",
+        type: "warning",
+        dangerouslyUseHTMLString: true,
       }
     );
 
-    ElMessage.info('正在生成 applinks，请稍候...');
-    const response = await axios.post('/api/generate-applinks');
-    
+    ElMessage.info("正在生成 applinks，请稍候...");
+    const response = await axios.post("/api/generate-applinks");
+
     if (response.data && response.data.success) {
-      ElMessage.success(response.data.message || 'applinks 生成成功');
+      ElMessage.success(response.data.message || "applinks 生成成功");
     } else {
-      ElMessage.error(response.data?.error || '生成失败');
+      ElMessage.error(response.data?.error || "生成失败");
     }
   } catch (error) {
-    if (error !== 'cancel') {
+    if (error !== "cancel") {
       const errorMsg = error.response?.data?.error || error.message;
-      ElMessage.error('生成失败: ' + errorMsg);
+      ElMessage.error("生成失败: " + errorMsg);
       if (error.response?.data?.output) {
-        console.error('命令输出:', error.response.data.output);
+        console.error("命令输出:", error.response.data.output);
       }
     }
   }
@@ -1787,17 +2316,19 @@ const generateAppLinks = async () => {
 // 加载分支列表
 const loadBranches = async () => {
   if (branches.value.length > 0) return; // 已经加载过，不再重复加载
-  
+
   try {
     branchesLoading.value = true;
-    const response = await axios.get('/api/git/branches');
+    const response = await axios.get("/api/git/branches");
     if (response.data && response.data.success) {
       branches.value = response.data.branches || [];
-      currentBranch.value = response.data.currentBranch || '';
+      currentBranch.value = response.data.currentBranch || "";
     }
   } catch (error) {
-    console.error('获取分支列表失败:', error);
-    ElMessage.warning('获取分支列表失败: ' + (error.response?.data?.error || error.message));
+    console.error("获取分支列表失败:", error);
+    ElMessage.warning(
+      "获取分支列表失败: " + (error.response?.data?.error || error.message)
+    );
   } finally {
     branchesLoading.value = false;
   }
@@ -1813,7 +2344,7 @@ const handlePlatformChange = () => {
   );
   if (defaultBranch) {
     cloudBuildForm.value.branch = defaultBranch;
-    console.log('defaultBranch:', defaultBranch);
+    console.log("defaultBranch:", defaultBranch);
   } else if (currentBranch.value) {
     cloudBuildForm.value.branch = currentBranch.value;
   }
@@ -1822,7 +2353,7 @@ const handlePlatformChange = () => {
 // 获取默认分支（从 localStorage）
 const getDefaultBranch = (alias, platform, environment) => {
   const key = `defaultBranch_${alias}_${platform}_${environment}`;
-  return localStorage.getItem(key) || '';
+  return localStorage.getItem(key) || "";
 };
 
 // 保存默认分支（到 localStorage）
@@ -1836,75 +2367,85 @@ const saveDefaultBranch = (alias, platform, environment, branch) => {
 // 显示云打包对话框
 const showCloudBuildDialog = async (alias, config) => {
   // 优先使用传入的 config 参数中的版本信息
-  let versionName = config?.versionName || '';
-  let androidVersionCode = config?.androidVersionCode || config?.versionCode || '';
-  let iosVersionCode = config?.iosVersionCode || config?.versionCode || '';
-  let packagename = config?.packagename || '';
-  let appEnName = config?.appEnName || '';
+  let versionName = config?.versionName || "";
+  let androidVersionCode =
+    config?.androidVersionCode || config?.versionCode || "";
+  let iosVersionCode = config?.iosVersionCode || config?.versionCode || "";
+  let packagename = config?.packagename || "";
+  let appEnName = config?.appEnName || "";
   let logoExists = config?.logoExists || false;
-  let dcAppId = config?.dcAppId || '';
-  let baseUrlRegion = config?.baseUrlRegion || '';
+  let dcAppId = config?.dcAppId || "";
+  let baseUrlRegion = config?.baseUrlRegion || "";
   let isSupportHotUpdate = config?.isSupportHotUpdate || false;
-  
+
   // 如果传入的 config 没有完整信息，尝试从 API 获取（使用 parse=true 参数）
   if (!versionName || !packagename || !appEnName || !baseUrlRegion) {
     try {
       const response = await axios.get(`/api/configs/${alias}?parse=true`);
       if (response.data) {
         const configData = response.data;
-        versionName = versionName || configData.versionName || '';
-        androidVersionCode = androidVersionCode || configData.androidVersionCode || configData.versionCode || '';
-        iosVersionCode = iosVersionCode || configData.iosVersionCode || configData.versionCode || '';
-        packagename = packagename || configData.packagename || '';
-        appEnName = appEnName || configData.appEnName || '';
+        versionName = versionName || configData.versionName || "";
+        androidVersionCode =
+          androidVersionCode ||
+          configData.androidVersionCode ||
+          configData.versionCode ||
+          "";
+        iosVersionCode =
+          iosVersionCode ||
+          configData.iosVersionCode ||
+          configData.versionCode ||
+          "";
+        packagename = packagename || configData.packagename || "";
+        appEnName = appEnName || configData.appEnName || "";
         logoExists = logoExists || configData.logoExists || false;
-        dcAppId = dcAppId || configData.dcAppId || '';
-        baseUrlRegion = baseUrlRegion || configData.baseUrlRegion || '';
-        isSupportHotUpdate = isSupportHotUpdate || configData.isSupportHotUpdate || false;
+        dcAppId = dcAppId || configData.dcAppId || "";
+        baseUrlRegion = baseUrlRegion || configData.baseUrlRegion || "";
+        isSupportHotUpdate =
+          isSupportHotUpdate || configData.isSupportHotUpdate || false;
       }
     } catch (error) {
-      console.error('获取配置信息失败:', error);
+      console.error("获取配置信息失败:", error);
     }
   }
-  
+
   // 计算默认的打包后构建号（当前值 +1）
   const currentAndroid = parseInt(androidVersionCode) || 0;
   const currentIos = parseInt(iosVersionCode) || 0;
-  
+
   // 确定环境（精准匹配：只有 baseUrlRegion === 'test' 才是测试环境，其他都是生产环境）
-  const environment = baseUrlRegion === 'test' ? 'test' : 'production';
-  const platform = 'android'; // 默认平台
-  
+  const environment = baseUrlRegion === "test" ? "test" : "production";
+  const platform = "android"; // 默认平台
+
   // 根据是否支持热更新决定默认操作类型
   // 如果不支持热更新，默认使用云打包；如果支持热更新，默认使用 wgt
-  const defaultOperation = isSupportHotUpdate ? 'wgt' : 'cloudbuild';
-  
+  const defaultOperation = isSupportHotUpdate ? "wgt" : "cloudbuild";
+
   cloudBuildForm.value = {
     alias: alias,
     platform: platform,
     environment: environment,
     operation: defaultOperation,
-    userVersionDesc: '',
+    userVersionDesc: "",
     versionName: versionName,
     androidVersionCode: androidVersionCode,
     iosVersionCode: iosVersionCode,
     nextAndroidVersionCode: currentAndroid > 0 ? currentAndroid + 1 : null,
     nextIosVersionCode: currentIos > 0 ? currentIos + 1 : null,
-    branch: '',
-    isSupportHotUpdate: isSupportHotUpdate
+    branch: "",
+    isSupportHotUpdate: isSupportHotUpdate,
   };
-  
+
   // 加载分支列表
   await loadBranches();
-  
+
   // 获取默认分支（在分支列表加载后，使用 cloudBuildForm.value 中的值确保精准匹配）
   const defaultBranch = getDefaultBranch(
     cloudBuildForm.value.alias,
     cloudBuildForm.value.platform,
     cloudBuildForm.value.environment
   );
-  cloudBuildForm.value.branch = defaultBranch || currentBranch.value || '';
-  
+  cloudBuildForm.value.branch = defaultBranch || currentBranch.value || "";
+
   cloudBuildDialogVisible.value = true;
 };
 
@@ -1912,18 +2453,18 @@ const showCloudBuildDialog = async (alias, config) => {
 const closeCloudBuildDialog = () => {
   cloudBuildDialogVisible.value = false;
   cloudBuildForm.value = {
-    alias: '',
-    platform: 'android',
-    environment: 'test',
-    operation: 'wgt',
-    userVersionDesc: '',
-    versionName: '',
-    androidVersionCode: '',
-    iosVersionCode: '',
+    alias: "",
+    platform: "android",
+    environment: "test",
+    operation: "wgt",
+    userVersionDesc: "",
+    versionName: "",
+    androidVersionCode: "",
+    iosVersionCode: "",
     nextAndroidVersionCode: null,
     nextIosVersionCode: null,
-    branch: '',
-    isSupportHotUpdate: false
+    branch: "",
+    isSupportHotUpdate: false,
   };
   if (cloudBuildFormRef.value) {
     cloudBuildFormRef.value.resetFields();
@@ -1933,29 +2474,30 @@ const closeCloudBuildDialog = () => {
 // 确认云打包
 const confirmCloudBuild = async () => {
   if (!cloudBuildFormRef.value) return;
-  
+
   try {
-    
     // 使用用户输入的打包后构建号
-    const targetAndroidVersionCode = cloudBuildForm.value.nextAndroidVersionCode;
+    const targetAndroidVersionCode =
+      cloudBuildForm.value.nextAndroidVersionCode;
     const targetIosVersionCode = cloudBuildForm.value.nextIosVersionCode;
-    
+
     // 根据平台确定要更新的构建号
-    const targetVersionCode = cloudBuildForm.value.platform === 'ios' 
-      ? targetIosVersionCode 
-      : targetAndroidVersionCode;
-    
+    const targetVersionCode =
+      cloudBuildForm.value.platform === "ios"
+        ? targetIosVersionCode
+        : targetAndroidVersionCode;
+
     // 注意：版本号更新将在后端切换分支和 git pull 之后进行，避免切换分支时因为本地修改而失败
-    
+
     // 关闭配置对话框，打开进度对话框
     cloudBuildDialogVisible.value = false;
     cloudBuildProgressVisible.value = true;
     cloudBuildLoading.value = true;
     cloudBuildOutput.value = [];
-    
+
     // 创建 AbortController 用于中断请求
     cloudBuildAbortController.value = new AbortController();
-    
+
     // 保存默认分支
     if (cloudBuildForm.value.branch) {
       saveDefaultBranch(
@@ -1967,84 +2509,98 @@ const confirmCloudBuild = async () => {
     }
 
     // 使用 fetch 接收流式响应
-    const response = await fetch(`/api/configs/${cloudBuildForm.value.alias}/cloud-build`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        platform: cloudBuildForm.value.platform,
-        operation: cloudBuildForm.value.operation,
-        userVersionDesc: cloudBuildForm.value.userVersionDesc || '',
-        versionName: cloudBuildForm.value.versionName,
-        androidVersionCode: cloudBuildForm.value.platform === 'android' ? targetVersionCode : undefined,
-        iosVersionCode: cloudBuildForm.value.platform === 'ios' ? targetVersionCode : undefined,
-        branch: cloudBuildForm.value.branch || undefined
-      }),
-      signal: cloudBuildAbortController.value.signal
-    });
+    const response = await fetch(
+      `/api/configs/${cloudBuildForm.value.alias}/cloud-build`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          platform: cloudBuildForm.value.platform,
+          operation: cloudBuildForm.value.operation,
+          userVersionDesc: cloudBuildForm.value.userVersionDesc || "",
+          versionName: cloudBuildForm.value.versionName,
+          androidVersionCode:
+            cloudBuildForm.value.platform === "android"
+              ? targetVersionCode
+              : undefined,
+          iosVersionCode:
+            cloudBuildForm.value.platform === "ios"
+              ? targetVersionCode
+              : undefined,
+          branch: cloudBuildForm.value.branch || undefined,
+        }),
+        signal: cloudBuildAbortController.value.signal,
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        errorData.error || `HTTP error! status: ${response.status}`
+      );
     }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = '';
+    let buffer = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
 
       for (const line of lines) {
-        if (line.startsWith('data: ')) {
+        if (line.startsWith("data: ")) {
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.type === 'success') {
+            if (data.type === "success") {
               cloudBuildLoading.value = false;
-              ElMessage.success('云打包完成');
+              ElMessage.success("云打包完成");
               // 解析输出并显示
               if (data.data.output) {
-                const outputLines = data.data.output.split('\n');
+                const outputLines = data.data.output.split("\n");
                 outputLines.forEach(text => {
                   if (text.trim()) {
-                    cloudBuildOutput.value.push({ type: 'info', text });
+                    cloudBuildOutput.value.push({ type: "info", text });
                   }
                 });
               }
-            } else if (data.type === 'error') {
+            } else if (data.type === "error") {
               cloudBuildLoading.value = false;
-              ElMessage.error(data.data.message || '云打包失败');
+              ElMessage.error(data.data.message || "云打包失败");
               // 解析错误输出并显示
               if (data.data.errorOutput) {
-                const errorLines = data.data.errorOutput.split('\n');
+                const errorLines = data.data.errorOutput.split("\n");
                 errorLines.forEach(text => {
                   if (text.trim()) {
-                    cloudBuildOutput.value.push({ type: 'error', text });
+                    cloudBuildOutput.value.push({ type: "error", text });
                   }
                 });
               }
-            } else if (data.type === 'cancelled') {
+            } else if (data.type === "cancelled") {
               cloudBuildLoading.value = false;
-              ElMessage.warning('打包已取消');
+              ElMessage.warning("打包已取消");
               // 解析输出并显示
               if (data.data.output) {
-                const outputLines = data.data.output.split('\n');
+                const outputLines = data.data.output.split("\n");
                 outputLines.forEach(text => {
                   if (text.trim()) {
-                    cloudBuildOutput.value.push({ type: 'info', text });
+                    cloudBuildOutput.value.push({ type: "info", text });
                   }
                 });
               }
-            } else if (data.type === 'output') {
+            } else if (data.type === "output") {
               // 实时输出
               if (data.data.text) {
-                cloudBuildOutput.value.push({ type: 'info', text: data.data.text });
+                cloudBuildOutput.value.push({
+                  type: "info",
+                  text: data.data.text,
+                });
                 // 限制输出行数，避免内存溢出
                 if (cloudBuildOutput.value.length > 1000) {
                   cloudBuildOutput.value = cloudBuildOutput.value.slice(-500);
@@ -2061,17 +2617,17 @@ const confirmCloudBuild = async () => {
     // 如果是表单验证错误，不显示错误消息（Element Plus 会自动显示）
     if (error && error.fields) {
       // 这是表单验证错误，Element Plus 会自动显示错误提示
-      console.log('表单验证失败:', error.fields);
+      console.log("表单验证失败:", error.fields);
       return;
     }
-    
+
     cloudBuildLoading.value = false;
-    if (error.name === 'AbortError') {
-      ElMessage.warning('打包已取消');
+    if (error.name === "AbortError") {
+      ElMessage.warning("打包已取消");
     } else {
-      const errorMsg = error.message || '云打包失败';
-      ElMessage.error('云打包失败: ' + errorMsg);
-      cloudBuildOutput.value.push({ type: 'error', text: errorMsg });
+      const errorMsg = error.message || "云打包失败";
+      ElMessage.error("云打包失败: " + errorMsg);
+      cloudBuildOutput.value.push({ type: "error", text: errorMsg });
     }
   }
 };
@@ -2082,11 +2638,13 @@ const cancelCloudBuild = async () => {
     if (cloudBuildAbortController.value) {
       cloudBuildAbortController.value.abort();
     }
-    await axios.post(`/api/configs/${cloudBuildForm.value.alias}/cloud-build/cancel`);
+    await axios.post(
+      `/api/configs/${cloudBuildForm.value.alias}/cloud-build/cancel`
+    );
     cloudBuildLoading.value = false;
-    ElMessage.warning('正在取消打包...');
+    ElMessage.warning("正在取消打包...");
   } catch (error) {
-    console.error('取消打包失败:', error);
+    console.error("取消打包失败:", error);
     // 即使取消请求失败，也尝试中断前端请求
     if (cloudBuildAbortController.value) {
       cloudBuildAbortController.value.abort();
@@ -2099,7 +2657,8 @@ const cancelCloudBuild = async () => {
 const scrollToBottom = () => {
   nextTick(() => {
     if (cloudBuildOutputRef.value) {
-      cloudBuildOutputRef.value.scrollTop = cloudBuildOutputRef.value.scrollHeight;
+      cloudBuildOutputRef.value.scrollTop =
+        cloudBuildOutputRef.value.scrollHeight;
     }
   });
 };
@@ -2121,68 +2680,76 @@ const closeCloudBuildProgress = () => {
 };
 
 // 编辑配置
-const editConfig = async (alias) => {
+const editConfig = async alias => {
   try {
     const response = await axios.get(`/api/configs/${alias}?parse=true`);
     editingConfig.value = response.data;
     // 确保数值类型正确
-    editingConfig.value.versionCode = parseInt(editingConfig.value.versionCode) || 1;
-    editingConfig.value.iosVersionCode = parseInt(editingConfig.value.iosVersionCode) || 1;
-    editingConfig.value.androidVersionCode = parseInt(editingConfig.value.androidVersionCode) || 1;
-    
+    editingConfig.value.versionCode =
+      parseInt(editingConfig.value.versionCode) || 1;
+    editingConfig.value.iosVersionCode =
+      parseInt(editingConfig.value.iosVersionCode) || 1;
+    editingConfig.value.androidVersionCode =
+      parseInt(editingConfig.value.androidVersionCode) || 1;
+
     // 根据 API 地区自动设置测试环境开关
     if (editingConfig.value.baseUrlRegion) {
-      editingConfig.value.isTest = editingConfig.value.baseUrlRegion === 'test';
+      editingConfig.value.isTest = editingConfig.value.baseUrlRegion === "test";
     }
-    
+
     // 如果不是 RestosuiteOnlinePro，自动取消勾选应用设置
-    if (editingConfig.value.alias !== 'RestosuiteOnlinePro') {
+    if (editingConfig.value.alias !== "RestosuiteOnlinePro") {
       editingConfig.value.isSupportAppSetting = false;
     }
-    
+
     // 加载 logo
     try {
       const logoResponse = await axios.get(`/api/configs/${alias}/logo`);
       if (logoResponse.data.exists) {
         editLogoUrl.value = logoResponse.data.url;
-        editLogoPreview.value = '';
+        editLogoPreview.value = "";
       } else {
-        editLogoUrl.value = '';
-        editLogoPreview.value = '';
+        editLogoUrl.value = "";
+        editLogoPreview.value = "";
       }
     } catch (error) {
-      editLogoUrl.value = '';
-      editLogoPreview.value = '';
+      editLogoUrl.value = "";
+      editLogoPreview.value = "";
     }
 
     // 加载 P12 证书信息
     try {
-      const p12Response = await axios.get(`/api/configs/${alias}/certificate/p12`);
+      const p12Response = await axios.get(
+        `/api/configs/${alias}/certificate/p12`
+      );
       if (p12Response.data.exists) {
         editP12Exists.value = true;
         editP12FileName.value = p12Response.data.filename;
       } else {
         editP12Exists.value = false;
-        editP12FileName.value = '';
+        editP12FileName.value = "";
       }
     } catch (error) {
       editP12Exists.value = false;
-      editP12FileName.value = '';
+      editP12FileName.value = "";
     }
 
     // 加载 Mobileprovision 文件信息
     try {
-      const mobileprovisionResponse = await axios.get(`/api/configs/${alias}/certificate/mobileprovision`);
+      const mobileprovisionResponse = await axios.get(
+        `/api/configs/${alias}/certificate/mobileprovision`
+      );
       if (mobileprovisionResponse.data.exists) {
         editMobileprovisionExists.value = true;
-        editMobileprovisionFileName.value = mobileprovisionResponse.data.filename;
+        editMobileprovisionFileName.value =
+          mobileprovisionResponse.data.filename;
       } else {
         editMobileprovisionExists.value = false;
-        editMobileprovisionFileName.value = '';
+        editMobileprovisionFileName.value = "";
       }
     } catch (error) {
       editMobileprovisionExists.value = false;
-      editMobileprovisionFileName.value = '';
+      editMobileprovisionFileName.value = "";
     }
 
     // 加载 Other 文件列表
@@ -2192,7 +2759,7 @@ const editConfig = async (alias) => {
     } catch (error) {
       editOtherFiles.value = [];
     }
-    
+
     // 重置文件
     editLogoFile.value = null;
     editLogoUploadRef.value?.clearFiles();
@@ -2201,10 +2768,12 @@ const editConfig = async (alias) => {
     editMobileprovisionFile.value = null;
     editMobileprovisionUploadRef.value?.clearFiles();
     editOtherFilesToDelete.value = [];
-    
+
     editDialogVisible.value = true;
   } catch (error) {
-    ElMessage.error('加载配置失败: ' + (error.response?.data?.error || error.message));
+    ElMessage.error(
+      "加载配置失败: " + (error.response?.data?.error || error.message)
+    );
   }
 };
 
@@ -2213,15 +2782,15 @@ const closeEditDialog = () => {
   editDialogVisible.value = false;
   editingConfig.value = null;
   editLogoFile.value = null;
-  editLogoPreview.value = '';
-  editLogoUrl.value = '';
+  editLogoPreview.value = "";
+  editLogoUrl.value = "";
   editLogoUploadRef.value?.clearFiles();
   editP12File.value = null;
-  editP12FileName.value = '';
+  editP12FileName.value = "";
   editP12Exists.value = false;
   editP12UploadRef.value?.clearFiles();
   editMobileprovisionFile.value = null;
-  editMobileprovisionFileName.value = '';
+  editMobileprovisionFileName.value = "";
   editMobileprovisionExists.value = false;
   editMobileprovisionUploadRef.value?.clearFiles();
   editOtherFiles.value = [];
@@ -2230,13 +2799,13 @@ const closeEditDialog = () => {
 };
 
 // 处理编辑时的地区变化
-const handleEditRegionChange = (value) => {
+const handleEditRegionChange = value => {
   // 根据 API 地区自动设置测试环境开关
   // 如果选择的是测试环境（test），则勾选测试环境开关；否则取消勾选
   if (editingConfig.value) {
-    editingConfig.value.isTest = value === 'test';
+    editingConfig.value.isTest = value === "test";
   }
-  
+
   // 设置对应的 iOS App Links 域名
   const selectedRegion = editRegionOptions.find(r => r.value === value);
   if (selectedRegion && selectedRegion.applinksDomain) {
@@ -2247,25 +2816,35 @@ const handleEditRegionChange = (value) => {
 // 保存编辑的配置
 const saveEditConfig = async () => {
   if (!editingConfig.value) return;
-  
+
   try {
     updating.value = true;
-    const response = await axios.put(`/api/configs/${editingConfig.value.alias}`, editingConfig.value);
-    ElMessage.success(response.data.message || '配置更新成功');
-    
+    const response = await axios.put(
+      `/api/configs/${editingConfig.value.alias}`,
+      editingConfig.value
+    );
+    ElMessage.success(response.data.message || "配置更新成功");
+
     // 如果有新的 logo 文件，上传 logo
     if (editLogoFile.value) {
       try {
         const formDataLogo = new FormData();
-        formDataLogo.append('logo', editLogoFile.value);
-        await axios.post(`/api/configs/${editingConfig.value.alias}/logo`, formDataLogo, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+        formDataLogo.append("logo", editLogoFile.value);
+        await axios.post(
+          `/api/configs/${editingConfig.value.alias}/logo`,
+          formDataLogo,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           }
-        });
-        ElMessage.success('Logo 上传成功！');
+        );
+        ElMessage.success("Logo 上传成功！");
       } catch (error) {
-        ElMessage.warning('配置更新成功，但 Logo 上传失败：' + (error.response?.data?.error || error.message));
+        ElMessage.warning(
+          "配置更新成功，但 Logo 上传失败：" +
+            (error.response?.data?.error || error.message)
+        );
       }
     }
 
@@ -2273,15 +2852,22 @@ const saveEditConfig = async () => {
     if (editP12File.value) {
       try {
         const formDataP12 = new FormData();
-        formDataP12.append('p12', editP12File.value);
-        await axios.post(`/api/configs/${editingConfig.value.alias}/certificate/p12`, formDataP12, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+        formDataP12.append("p12", editP12File.value);
+        await axios.post(
+          `/api/configs/${editingConfig.value.alias}/certificate/p12`,
+          formDataP12,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           }
-        });
-        ElMessage.success('P12 证书上传成功！');
+        );
+        ElMessage.success("P12 证书上传成功！");
       } catch (error) {
-        ElMessage.warning('配置更新成功，但 P12 证书上传失败：' + (error.response?.data?.error || error.message));
+        ElMessage.warning(
+          "配置更新成功，但 P12 证书上传失败：" +
+            (error.response?.data?.error || error.message)
+        );
       }
     }
 
@@ -2289,24 +2875,41 @@ const saveEditConfig = async () => {
     if (editMobileprovisionFile.value) {
       try {
         const formDataMobileprovision = new FormData();
-        formDataMobileprovision.append('mobileprovision', editMobileprovisionFile.value);
-        await axios.post(`/api/configs/${editingConfig.value.alias}/certificate/mobileprovision`, formDataMobileprovision, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+        formDataMobileprovision.append(
+          "mobileprovision",
+          editMobileprovisionFile.value
+        );
+        await axios.post(
+          `/api/configs/${editingConfig.value.alias}/certificate/mobileprovision`,
+          formDataMobileprovision,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           }
-        });
-        ElMessage.success('Mobileprovision 文件上传成功！');
+        );
+        ElMessage.success("Mobileprovision 文件上传成功！");
       } catch (error) {
-        ElMessage.warning('配置更新成功，但 Mobileprovision 文件上传失败：' + (error.response?.data?.error || error.message));
+        ElMessage.warning(
+          "配置更新成功，但 Mobileprovision 文件上传失败：" +
+            (error.response?.data?.error || error.message)
+        );
       }
     }
 
     // 删除标记为删除的 Other 文件
     for (const filename of editOtherFilesToDelete.value) {
       try {
-        await axios.delete(`/api/configs/${editingConfig.value.alias}/other/${encodeURIComponent(filename)}`);
+        await axios.delete(
+          `/api/configs/${editingConfig.value.alias}/other/${encodeURIComponent(
+            filename
+          )}`
+        );
       } catch (error) {
-        ElMessage.warning(`删除文件 "${filename}" 失败：` + (error.response?.data?.error || error.message));
+        ElMessage.warning(
+          `删除文件 "${filename}" 失败：` +
+            (error.response?.data?.error || error.message)
+        );
       }
     }
 
@@ -2316,61 +2919,72 @@ const saveEditConfig = async () => {
       for (const file of newOtherFiles) {
         try {
           const formDataOther = new FormData();
-          formDataOther.append('file', file.raw);
-          await axios.post(`/api/configs/${editingConfig.value.alias}/other`, formDataOther, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
+          formDataOther.append("file", file.raw);
+          await axios.post(
+            `/api/configs/${editingConfig.value.alias}/other`,
+            formDataOther,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
             }
-          });
+          );
         } catch (error) {
-          ElMessage.warning(`文件 "${file.name}" 上传失败：` + (error.response?.data?.error || error.message));
+          ElMessage.warning(
+            `文件 "${file.name}" 上传失败：` +
+              (error.response?.data?.error || error.message)
+          );
         }
       }
       if (newOtherFiles.length > 0) {
         ElMessage.success(`成功上传 ${newOtherFiles.length} 个其他文件！`);
       }
     }
-    
+
     closeEditDialog();
     loadConfigs();
   } catch (error) {
-    ElMessage.error('更新失败: ' + (error.response?.data?.error || error.message));
+    ElMessage.error(
+      "更新失败: " + (error.response?.data?.error || error.message)
+    );
   } finally {
     updating.value = false;
   }
 };
 
 // 处理编辑时的 Logo 文件选择
-const handleEditLogoChange = (file) => {
+const handleEditLogoChange = file => {
   // 验证文件类型
-  if (file.raw.type !== 'image/png') {
-    ElMessage.error('Logo 必须是 PNG 格式');
+  if (file.raw.type !== "image/png") {
+    ElMessage.error("Logo 必须是 PNG 格式");
     editLogoUploadRef.value?.clearFiles();
     return;
   }
 
   // 验证文件尺寸
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = e => {
     const img = new Image();
     img.onload = () => {
       if (img.width !== 1024 || img.height !== 1024) {
-        ElMessage.error(`Logo 尺寸必须是 1024x1024，当前尺寸：${img.width}x${img.height}`);
+        ElMessage.error(
+          `Logo 尺寸必须是 1024x1024，当前尺寸：${img.width}x${img.height}`
+        );
         editLogoUploadRef.value?.clearFiles();
         editLogoFile.value = null;
-        editLogoPreview.value = '';
+        editLogoPreview.value = "";
         return;
       }
       // 验证通过
       editLogoFile.value = file.raw;
       editLogoPreview.value = e.target.result;
-      editLogoUrl.value = ''; // 清除旧 URL，显示新预览
+      editLogoUrl.value = ""; // 清除旧 URL，显示新预览
     };
     img.onerror = () => {
-      ElMessage.error('图片加载失败，请重新选择');
+      ElMessage.error("图片加载失败，请重新选择");
       editLogoUploadRef.value?.clearFiles();
       editLogoFile.value = null;
-      editLogoPreview.value = '';
+      editLogoPreview.value = "";
     };
     img.src = e.target.result;
   };
@@ -2380,41 +2994,39 @@ const handleEditLogoChange = (file) => {
 // 处理编辑时的 Logo 文件移除
 const handleEditLogoRemove = () => {
   editLogoFile.value = null;
-  editLogoPreview.value = '';
+  editLogoPreview.value = "";
 };
 
 // 删除编辑时的 Logo
 const deleteEditLogo = async () => {
   if (!editingConfig.value) return;
-  
+
   try {
-    await ElMessageBox.confirm(
-      '确定要删除 Logo 吗？',
-      '确认删除',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    );
-    
+    await ElMessageBox.confirm("确定要删除 Logo 吗？", "确认删除", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+
     await axios.delete(`/api/configs/${editingConfig.value.alias}/logo`);
     editLogoFile.value = null;
-    editLogoPreview.value = '';
-    editLogoUrl.value = '';
+    editLogoPreview.value = "";
+    editLogoUrl.value = "";
     editLogoUploadRef.value?.clearFiles();
-    ElMessage.success('Logo 删除成功');
+    ElMessage.success("Logo 删除成功");
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败: ' + (error.response?.data?.error || error.message));
+    if (error !== "cancel") {
+      ElMessage.error(
+        "删除失败: " + (error.response?.data?.error || error.message)
+      );
     }
   }
 };
 
 // 处理编辑时的 P12 文件选择
-const handleEditP12Change = (file) => {
-  if (!file.raw.name.toLowerCase().endsWith('.p12')) {
-    ElMessage.error('文件必须是 .p12 格式');
+const handleEditP12Change = file => {
+  if (!file.raw.name.toLowerCase().endsWith(".p12")) {
+    ElMessage.error("文件必须是 .p12 格式");
     editP12UploadRef.value?.clearFiles();
     return;
   }
@@ -2426,41 +3038,41 @@ const handleEditP12Change = (file) => {
 // 处理编辑时的 P12 文件移除
 const handleEditP12Remove = () => {
   editP12File.value = null;
-  editP12FileName.value = '';
+  editP12FileName.value = "";
 };
 
 // 删除编辑时的 P12 证书
 const deleteEditP12 = async () => {
   if (!editingConfig.value) return;
-  
+
   try {
-    await ElMessageBox.confirm(
-      '确定要删除 P12 证书吗？',
-      '确认删除',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
+    await ElMessageBox.confirm("确定要删除 P12 证书吗？", "确认删除", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+
+    await axios.delete(
+      `/api/configs/${editingConfig.value.alias}/certificate/p12`
     );
-    
-    await axios.delete(`/api/configs/${editingConfig.value.alias}/certificate/p12`);
     editP12File.value = null;
-    editP12FileName.value = '';
+    editP12FileName.value = "";
     editP12Exists.value = false;
     editP12UploadRef.value?.clearFiles();
-    ElMessage.success('P12 证书删除成功');
+    ElMessage.success("P12 证书删除成功");
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败: ' + (error.response?.data?.error || error.message));
+    if (error !== "cancel") {
+      ElMessage.error(
+        "删除失败: " + (error.response?.data?.error || error.message)
+      );
     }
   }
 };
 
 // 处理编辑时的 Mobileprovision 文件选择
-const handleEditMobileprovisionChange = (file) => {
-  if (!file.raw.name.toLowerCase().endsWith('.mobileprovision')) {
-    ElMessage.error('文件必须是 .mobileprovision 格式');
+const handleEditMobileprovisionChange = file => {
+  if (!file.raw.name.toLowerCase().endsWith(".mobileprovision")) {
+    ElMessage.error("文件必须是 .mobileprovision 格式");
     editMobileprovisionUploadRef.value?.clearFiles();
     return;
   }
@@ -2472,52 +3084,68 @@ const handleEditMobileprovisionChange = (file) => {
 // 处理编辑时的 Mobileprovision 文件移除
 const handleEditMobileprovisionRemove = () => {
   editMobileprovisionFile.value = null;
-  editMobileprovisionFileName.value = '';
+  editMobileprovisionFileName.value = "";
 };
 
 // 删除编辑时的 Mobileprovision 文件
 const deleteEditMobileprovision = async () => {
   if (!editingConfig.value) return;
-  
+
   try {
     await ElMessageBox.confirm(
-      '确定要删除 Mobileprovision 文件吗？',
-      '确认删除',
+      "确定要删除 Mobileprovision 文件吗？",
+      "确认删除",
       {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
       }
     );
-    
-    await axios.delete(`/api/configs/${editingConfig.value.alias}/certificate/mobileprovision`);
+
+    await axios.delete(
+      `/api/configs/${editingConfig.value.alias}/certificate/mobileprovision`
+    );
     editMobileprovisionFile.value = null;
-    editMobileprovisionFileName.value = '';
+    editMobileprovisionFileName.value = "";
     editMobileprovisionExists.value = false;
     editMobileprovisionUploadRef.value?.clearFiles();
-    ElMessage.success('Mobileprovision 文件删除成功');
+    ElMessage.success("Mobileprovision 文件删除成功");
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败: ' + (error.response?.data?.error || error.message));
+    if (error !== "cancel") {
+      ElMessage.error(
+        "删除失败: " + (error.response?.data?.error || error.message)
+      );
     }
   }
 };
 
 // 处理编辑时的 Other 文件选择
-const handleEditOtherFileChange = (file) => {
+const handleEditOtherFileChange = file => {
   // 检查是否已存在同名文件（已存在的文件或新上传的文件）
-  const existingIndex = editOtherFiles.value.findIndex(f => (f.filename || f.name) === file.name);
+  const existingIndex = editOtherFiles.value.findIndex(
+    f => (f.filename || f.name) === file.name
+  );
   if (existingIndex >= 0) {
     ElMessage.warning(`文件 "${file.name}" 已存在，将替换原有文件`);
-    editOtherFiles.value[existingIndex] = { raw: file.raw, name: file.name, filename: file.name };
+    editOtherFiles.value[existingIndex] = {
+      raw: file.raw,
+      name: file.name,
+      filename: file.name,
+    };
   } else {
-    editOtherFiles.value.push({ raw: file.raw, name: file.name, filename: file.name });
+    editOtherFiles.value.push({
+      raw: file.raw,
+      name: file.name,
+      filename: file.name,
+    });
   }
 };
 
 // 处理编辑时的 Other 文件移除
-const handleEditOtherFileRemove = (file) => {
-  const index = editOtherFiles.value.findIndex(f => (f.filename || f.name) === file.name);
+const handleEditOtherFileRemove = file => {
+  const index = editOtherFiles.value.findIndex(
+    f => (f.filename || f.name) === file.name
+  );
   if (index >= 0) {
     editOtherFiles.value.splice(index, 1);
   }
@@ -2534,12 +3162,12 @@ const removeEditOtherFile = (index, filename) => {
 };
 
 // 复制到剪贴板
-const copyToClipboard = async (text) => {
+const copyToClipboard = async text => {
   try {
     await navigator.clipboard.writeText(text);
-    ElMessage.success('已复制到剪贴板');
+    ElMessage.success("已复制到剪贴板");
   } catch (error) {
-    ElMessage.error('复制失败，请手动复制');
+    ElMessage.error("复制失败，请手动复制");
   }
 };
 
@@ -2551,9 +3179,9 @@ onMounted(() => {
 const showConvertAABDialog = (alias, config) => {
   convertAABForm.value = {
     alias: alias,
-    aabFile: null
+    aabFile: null,
   };
-  convertAABError.value = '';
+  convertAABError.value = "";
   convertAABDialogVisible.value = true;
   if (aabUploadRef.value) {
     aabUploadRef.value.clearFiles();
@@ -2564,97 +3192,174 @@ const showConvertAABDialog = (alias, config) => {
 const closeConvertAABDialog = () => {
   convertAABDialogVisible.value = false;
   convertAABForm.value = {
-    alias: '',
-    aabFile: null
+    alias: "",
+    aabFile: null,
   };
-  convertAABError.value = '';
+  convertAABError.value = "";
   if (aabUploadRef.value) {
     aabUploadRef.value.clearFiles();
   }
 };
 
+// 显示消息推送测试对话框
+const showTestPushDialog = (alias, config) => {
+  testPushForm.value = {
+    alias: alias,
+    title: "",
+    content: "",
+    cid: "",
+    page: "/subPackages/order/detail/index?orderId=1990968933033046098",
+  };
+  testPushError.value = "";
+  testPushDialogVisible.value = true;
+};
+
+// 关闭消息推送测试对话框
+const closeTestPushDialog = () => {
+  testPushDialogVisible.value = false;
+  testPushForm.value = {
+    alias: "",
+    title: "",
+    content: "",
+    cid: "",
+    page: "/subPackages/order/detail/index?orderId=1990968933033046098",
+  };
+  testPushError.value = "";
+};
+
+// 确认发送推送
+const confirmTestPush = async () => {
+  if (
+    !testPushForm.value.title ||
+    !testPushForm.value.content ||
+    !testPushForm.value.cid
+  ) {
+    ElMessage.warning("请填写所有必填字段");
+    return;
+  }
+
+  try {
+    testPushLoading.value = true;
+    testPushError.value = "";
+
+    const response = await axios.post(
+      `/api/configs/${testPushForm.value.alias}/test-push`,
+      {
+        title: testPushForm.value.title,
+        content: testPushForm.value.content,
+        cid: testPushForm.value.cid,
+        page:
+          testPushForm.value.page ||
+          "/subPackages/order/detail/index?orderId=1990968933033046098",
+      }
+    );
+
+    if (response.data && response.data.success) {
+      ElMessage.success("推送发送成功！");
+      if (response.data.data) {
+        console.log("推送详情:", response.data.data);
+      }
+      closeTestPushDialog();
+    } else {
+      testPushError.value = response.data?.error || "推送发送失败";
+      ElMessage.error(testPushError.value);
+    }
+  } catch (error) {
+    const errorMsg =
+      error.response?.data?.error || error.message || "推送发送失败";
+    testPushError.value = errorMsg;
+    ElMessage.error("推送发送失败: " + errorMsg);
+  } finally {
+    testPushLoading.value = false;
+  }
+};
+
 // 处理 AAB 文件选择
-const handleAABFileChange = (file) => {
-  if (!file.raw.name.toLowerCase().endsWith('.aab')) {
-    ElMessage.error('文件必须是 .aab 格式');
+const handleAABFileChange = file => {
+  if (!file.raw.name.toLowerCase().endsWith(".aab")) {
+    ElMessage.error("文件必须是 .aab 格式");
     aabUploadRef.value?.clearFiles();
     convertAABForm.value.aabFile = null;
     return;
   }
   convertAABForm.value.aabFile = file.raw;
-  convertAABError.value = '';
+  convertAABError.value = "";
 };
 
 // 处理 AAB 文件移除
 const handleAABFileRemove = () => {
   convertAABForm.value.aabFile = null;
-  convertAABError.value = '';
+  convertAABError.value = "";
 };
 
 // 确认转换 AAB 到 APK
 const confirmConvertAAB = async () => {
   if (!convertAABForm.value.aabFile) {
-    ElMessage.warning('请选择 AAB 文件');
+    ElMessage.warning("请选择 AAB 文件");
     return;
   }
 
   try {
     convertAABLoading.value = true;
-    convertAABError.value = '';
+    convertAABError.value = "";
 
     const formData = new FormData();
-    formData.append('aab', convertAABForm.value.aabFile);
+    formData.append("aab", convertAABForm.value.aabFile);
 
     const response = await axios.post(
       `/api/configs/${convertAABForm.value.alias}/convert-aab-to-apk`,
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       }
     );
 
     if (response.data && response.data.success) {
-      ElMessage.success(`AAB 转 APK 成功！文件大小: ${response.data.apkSizeMB} MB`);
-      
+      ElMessage.success(
+        `AAB 转 APK 成功！文件大小: ${response.data.apkSizeMB} MB`
+      );
+
       // 如果返回了下载链接，自动打开下载
       if (response.data.downloadUrl && response.data.apkFileName) {
         // 创建下载链接并触发下载
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = response.data.downloadUrl;
         link.download = response.data.apkFileName;
         document.body.appendChild(link);
         link.click();
-        
+
         // 等待下载完成后删除服务器上的文件
         // 使用 setTimeout 延迟删除，确保下载已经开始
         setTimeout(async () => {
           try {
             // 删除服务器上的 APK 文件
-            await axios.delete(`/api/downloads/${encodeURIComponent(response.data.apkFileName)}`);
-            console.log('APK 文件已从服务器删除');
+            await axios.delete(
+              `/api/downloads/${encodeURIComponent(response.data.apkFileName)}`
+            );
+            console.log("APK 文件已从服务器删除");
           } catch (deleteError) {
-            console.warn('删除服务器上的 APK 文件失败:', deleteError);
+            console.warn("删除服务器上的 APK 文件失败:", deleteError);
             // 不显示错误给用户，因为文件已经下载到本地了
           }
         }, 2000); // 延迟 2 秒后删除
-        
+
         document.body.removeChild(link);
-        ElMessage.info('正在下载 APK 文件...');
+        ElMessage.info("正在下载 APK 文件...");
       }
-      
+
       closeConvertAABDialog();
     } else {
-      convertAABError.value = response.data?.error || '转换失败';
+      convertAABError.value = response.data?.error || "转换失败";
       ElMessage.error(convertAABError.value);
     }
   } catch (error) {
-    const errorMsg = error.response?.data?.error || error.message || '转换失败';
+    const errorMsg = error.response?.data?.error || error.message || "转换失败";
     convertAABError.value = errorMsg;
-    ElMessage.error('转换失败: ' + errorMsg);
+    ElMessage.error("转换失败: " + errorMsg);
     if (error.response?.data?.details) {
-      console.error('转换详情:', error.response.data.details);
+      console.error("转换详情:", error.response.data.details);
     }
   } finally {
     convertAABLoading.value = false;
@@ -2665,7 +3370,7 @@ const confirmConvertAAB = async () => {
 defineExpose({
   loadConfigs,
   viewConfig,
-  editConfig
+  editConfig,
 });
 </script>
 
@@ -2693,7 +3398,7 @@ defineExpose({
   color: #d4d4d4;
   padding: 16px;
   border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -2758,7 +3463,7 @@ defineExpose({
   padding: 15px;
   border-radius: 4px;
   overflow-x: auto;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 13px;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -2780,7 +3485,7 @@ defineExpose({
   background-color: #f5f5f5;
   padding: 15px;
   border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 13px;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -2955,4 +3660,3 @@ defineExpose({
   }
 }
 </style>
-
