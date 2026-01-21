@@ -100,6 +100,40 @@
             />
             <span v-else>-</span>
           </template>
+          <template v-else-if="field.key === 'iosSplashExists'">
+            <img
+              v-if="row.iosSplashExists"
+              :src="`/appConfig/${row.folderName}/ios启动图.png`"
+              alt="iOS 启动图"
+              class="table-splash-image"
+              @error="handleImageError"
+              @click="viewSplashImage(`/appConfig/${row.folderName}/ios启动图.png`, 'iOS 启动图')"
+            />
+            <span v-else>-</span>
+          </template>
+          <template v-else-if="field.key === 'androidSplashExists'">
+            <img
+              v-if="row.androidSplashExists"
+              :src="`/appConfig/${row.folderName}/android启动图.png`"
+              alt="Android 启动图"
+              class="table-splash-image"
+              @error="handleImageError"
+              @click="viewSplashImage(`/appConfig/${row.folderName}/android启动图.png`, 'Android 启动图')"
+            />
+            <span v-else>-</span>
+          </template>
+          <template v-else-if="field.key === 'splashscreenIosStyle'">
+            <el-tag v-if="row.splashscreenIosStyle" type="info" size="small">
+              {{ row.splashscreenIosStyle }}
+            </el-tag>
+            <span v-else>-</span>
+          </template>
+          <template v-else-if="field.key === 'splashscreenAndroidStyle'">
+            <el-tag v-if="row.splashscreenAndroidStyle" type="info" size="small">
+              {{ row.splashscreenAndroidStyle }}
+            </el-tag>
+            <span v-else>-</span>
+          </template>
           <template v-else-if="field.key === 'createdAt'">
             {{ formatDate(row[field.key]) }}
           </template>
@@ -274,12 +308,48 @@
             </div>
           </div>
 
+          <!-- 启动图展示 -->
+          <div v-if="visibleFieldsMap.iosSplashExists || visibleFieldsMap.androidSplashExists" class="splash-section">
+            <div v-if="visibleFieldsMap.iosSplashExists" class="splash-item">
+              <div class="splash-label">iOS 启动图</div>
+              <img
+                v-if="config.iosSplashExists"
+                :src="`/appConfig/${config.folderName}/ios启动图.png`"
+                alt="iOS 启动图"
+                class="splash-image"
+                @error="handleImageError"
+                @click="viewSplashImage(`/appConfig/${config.folderName}/ios启动图.png`, 'iOS 启动图')"
+              />
+              <div v-else class="splash-placeholder">
+                <el-icon><Picture /></el-icon>
+                <span>暂无</span>
+              </div>
+            </div>
+            <div v-if="visibleFieldsMap.androidSplashExists" class="splash-item">
+              <div class="splash-label">Android 启动图</div>
+              <img
+                v-if="config.androidSplashExists"
+                :src="`/appConfig/${config.folderName}/android启动图.png`"
+                alt="Android 启动图"
+                class="splash-image"
+                @error="handleImageError"
+                @click="viewSplashImage(`/appConfig/${config.folderName}/android启动图.png`, 'Android 启动图')"
+              />
+              <div v-else class="splash-placeholder">
+                <el-icon><Picture /></el-icon>
+                <span>暂无</span>
+              </div>
+            </div>
+          </div>
+
           <!-- 配置信息 -->
           <el-descriptions :column="1" size="small" border>
             <el-descriptions-item
               v-for="field in visibleFields.filter(
                 f =>
                   f.key !== 'logoExists' &&
+                  f.key !== 'iosSplashExists' &&
+                  f.key !== 'androidSplashExists' &&
                   f.key !== 'alias' &&
                   f.key !== 'baseUrlRegion'
               )"
@@ -455,6 +525,23 @@
         <el-button @click="showFieldConfigDialog = false">取消</el-button>
         <el-button type="primary" @click="saveFieldConfig">确定</el-button>
       </template>
+    </el-dialog>
+
+    <!-- 启动图预览对话框 -->
+    <el-dialog
+      v-model="splashImageDialogVisible"
+      :title="splashImageTitle"
+      width="600px"
+      align-center
+    >
+      <div style="text-align: center;">
+        <img
+          v-if="splashImageUrl"
+          :src="splashImageUrl"
+          alt="启动图预览"
+          style="max-width: 100%; max-height: 70vh; border-radius: 8px;"
+        />
+      </div>
     </el-dialog>
 
     <!-- 查看配置对话框 -->
@@ -861,6 +948,119 @@
               <el-color-picker v-model="editingConfig.themeColor" />
             </template>
           </el-input>
+        </el-form-item>
+
+        <el-divider content-position="left">启动屏配置</el-divider>
+        <el-form-item label="iOS 启动屏样式">
+          <el-select v-model="editingConfig.splashscreenIosStyle" placeholder="请选择 iOS 启动屏样式">
+            <el-option label="通用（无需自定义）" value="common" />
+            <el-option label="Storyboard (自定义启动页)" value="storyboard" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="iOS 启动图" v-if="editingConfig.splashscreenIosStyle === 'storyboard'">
+          <div style="display: flex; align-items: flex-start; gap: 20px">
+            <div v-if="editIOSSplashPreview || editIOSSplashUrl" style="position: relative; display: inline-block">
+              <img
+                :src="editIOSSplashPreview || editIOSSplashUrl"
+                alt="iOS 启动图预览"
+                style="width: 140px; height: 300px; border: 1px solid #dcdfe6; border-radius: 8px; object-fit: cover; background: #f5f7fa"
+              />
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                size="small"
+                style="position: absolute; top: -8px; right: -8px"
+                @click="deleteEditIOSSplash"
+                title="删除 iOS 启动图预览"
+              />
+            </div>
+            <div
+              v-else
+              style="width: 140px; height: 300px; border: 1px dashed #dcdfe6; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fafafa; color: #909399; font-size: 12px; text-align: center; padding: 10px"
+            >
+              暂无 iOS 启动图
+            </div>
+            <div style="flex: 1">
+              <el-upload
+                ref="editIOSSplashUploadRef"
+                :auto-upload="false"
+                :on-change="handleEditIOSSplashChange"
+                :on-remove="handleEditIOSSplashRemove"
+                :limit="1"
+                accept="image/png"
+                :show-file-list="false"
+              >
+                <template #trigger>
+                  <el-button type="primary">
+                    <el-icon><Upload /></el-icon>
+                    选择 iOS 启动图
+                  </el-button>
+                </template>
+              </el-upload>
+              <div class="form-tip" style="margin-top: 8px">
+                <el-icon><InfoFilled /></el-icon>
+                PNG，尺寸 1125x2436，将保存为 <code>ios启动图.png</code>
+              </div>
+            </div>
+          </div>
+        </el-form-item>
+
+        <el-form-item label="Android 启动屏样式">
+          <el-select v-model="editingConfig.splashscreenAndroidStyle" placeholder="请选择 Android 启动屏样式">
+            <el-option label="通用（无需自定义）" value="common" />
+            <el-option label="Default (自定义启动页)" value="default" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="Android 启动图" v-if="editingConfig.splashscreenAndroidStyle === 'default'">
+          <div style="display: flex; align-items: flex-start; gap: 20px">
+            <div v-if="editAndroidSplashPreview || editAndroidSplashUrl" style="position: relative; display: inline-block">
+              <img
+                :src="editAndroidSplashPreview || editAndroidSplashUrl"
+                alt="Android 启动图预览"
+                style="width: 140px; height: 260px; border: 1px solid #dcdfe6; border-radius: 8px; object-fit: cover; background: #f5f7fa"
+              />
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                size="small"
+                style="position: absolute; top: -8px; right: -8px"
+                @click="deleteEditAndroidSplash"
+                title="删除 Android 启动图预览"
+              />
+            </div>
+            <div
+              v-else
+              style="width: 140px; height: 260px; border: 1px dashed #dcdfe6; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fafafa; color: #909399; font-size: 12px; text-align: center; padding: 10px"
+            >
+              暂无 Android 启动图
+            </div>
+            <div style="flex: 1">
+              <el-upload
+                ref="editAndroidSplashUploadRef"
+                :auto-upload="false"
+                :on-change="handleEditAndroidSplashChange"
+                :on-remove="handleEditAndroidSplashRemove"
+                :limit="1"
+                accept="image/png"
+                :show-file-list="false"
+              >
+                <template #trigger>
+                  <el-button type="primary">
+                    <el-icon><Upload /></el-icon>
+                    选择 Android 启动图
+                  </el-button>
+                </template>
+              </el-upload>
+              <div class="form-tip" style="margin-top: 8px">
+                <el-icon><InfoFilled /></el-icon>
+                PNG，尺寸 1080x1882，将保存为 <code>android启动图.png</code>
+              </div>
+            </div>
+          </div>
         </el-form-item>
 
         <el-divider content-position="left">证书配置</el-divider>
@@ -1751,6 +1951,10 @@ const selectedFields = ref([]);
 // 所有可用字段定义
 const allFields = [
   { key: "logoExists", label: "Logo", width: 100, default: true },
+  { key: "iosSplashExists", label: "iOS 启动图", width: 110, default: false },
+  { key: "androidSplashExists", label: "Android 启动图", width: 130, default: false },
+  { key: "splashscreenIosStyle", label: "iOS 启动屏样式", minWidth: 140, default: false },
+  { key: "splashscreenAndroidStyle", label: "Android 启动屏样式", minWidth: 160, default: false },
   { key: "baseUrlRegion", label: "环境", width: 120, default: true },
   { key: "alias", label: "品牌别名", width: 150, default: true },
   { key: "appName", label: "应用名称", minWidth: 150, default: true },
@@ -1970,6 +2174,9 @@ const viewDialogVisible = ref(false);
 const viewingConfig = ref(null);
 const editDialogVisible = ref(false);
 const editingConfig = ref(null);
+const splashImageDialogVisible = ref(false);
+const splashImageUrl = ref("");
+const splashImageTitle = ref("");
 const editFormRef = ref(null);
 const updating = ref(false);
 const editLogoUploadRef = ref(null);
@@ -1987,6 +2194,14 @@ const editMobileprovisionExists = ref(false);
 const editOtherFilesUploadRef = ref(null);
 const editOtherFiles = ref([]);
 const editOtherFilesToDelete = ref([]);
+const editIOSSplashUploadRef = ref(null);
+const editIOSSplashFile = ref(null);
+const editIOSSplashPreview = ref("");
+const editIOSSplashUrl = ref("");
+const editAndroidSplashUploadRef = ref(null);
+const editAndroidSplashFile = ref(null);
+const editAndroidSplashPreview = ref("");
+const editAndroidSplashUrl = ref("");
 const generateUnipushDialogVisible = ref(false);
 const keystoreDialogVisible = ref(false);
 const keystoreInfo = ref(null);
@@ -2103,6 +2318,13 @@ const viewConfig = async alias => {
 const closeViewDialog = () => {
   viewDialogVisible.value = false;
   viewingConfig.value = null;
+};
+
+// 查看启动图
+const viewSplashImage = (url, title) => {
+  splashImageUrl.value = url;
+  splashImageTitle.value = title;
+  splashImageDialogVisible.value = true;
 };
 
 // 查看 Keystore 信息
@@ -2760,6 +2982,24 @@ const editConfig = async alias => {
       editOtherFiles.value = [];
     }
 
+    // 加载启动图信息
+    try {
+      const iosSplashResp = await axios.get(`/api/configs/${alias}/splash/ios`);
+      editIOSSplashUrl.value = iosSplashResp.data.exists ? iosSplashResp.data.url : "";
+      editIOSSplashPreview.value = "";
+    } catch (e) {
+      editIOSSplashUrl.value = "";
+      editIOSSplashPreview.value = "";
+    }
+    try {
+      const androidSplashResp = await axios.get(`/api/configs/${alias}/splash/android`);
+      editAndroidSplashUrl.value = androidSplashResp.data.exists ? androidSplashResp.data.url : "";
+      editAndroidSplashPreview.value = "";
+    } catch (e) {
+      editAndroidSplashUrl.value = "";
+      editAndroidSplashPreview.value = "";
+    }
+
     // 重置文件
     editLogoFile.value = null;
     editLogoUploadRef.value?.clearFiles();
@@ -2768,6 +3008,10 @@ const editConfig = async alias => {
     editMobileprovisionFile.value = null;
     editMobileprovisionUploadRef.value?.clearFiles();
     editOtherFilesToDelete.value = [];
+    editIOSSplashFile.value = null;
+    editIOSSplashUploadRef.value?.clearFiles();
+    editAndroidSplashFile.value = null;
+    editAndroidSplashUploadRef.value?.clearFiles();
 
     editDialogVisible.value = true;
   } catch (error) {
@@ -2819,9 +3063,16 @@ const saveEditConfig = async () => {
 
   try {
     updating.value = true;
+    const payload = {
+      ...editingConfig.value,
+      splashscreen: {
+        iosStyle: editingConfig.value.splashscreenIosStyle || "common",
+        androidStyle: editingConfig.value.splashscreenAndroidStyle || "common",
+      },
+    };
     const response = await axios.put(
       `/api/configs/${editingConfig.value.alias}`,
-      editingConfig.value
+      payload
     );
     ElMessage.success(response.data.message || "配置更新成功");
 
@@ -2941,6 +3192,40 @@ const saveEditConfig = async () => {
       }
     }
 
+    // 上传 iOS 启动图（仅 storyboard）
+    if (editingConfig.value.splashscreenIosStyle === "storyboard" && editIOSSplashFile.value) {
+      try {
+        const formDataIosSplash = new FormData();
+        formDataIosSplash.append("iosSplash", editIOSSplashFile.value);
+        await axios.post(`/api/configs/${editingConfig.value.alias}/splash/ios`, formDataIosSplash, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        ElMessage.success("iOS 启动图上传成功！");
+      } catch (error) {
+        ElMessage.warning(
+          "配置更新成功，但 iOS 启动图上传失败：" +
+            (error.response?.data?.error || error.message)
+        );
+      }
+    }
+
+    // 上传 Android 启动图（仅 default）
+    if (editingConfig.value.splashscreenAndroidStyle === "default" && editAndroidSplashFile.value) {
+      try {
+        const formDataAndroidSplash = new FormData();
+        formDataAndroidSplash.append("androidSplash", editAndroidSplashFile.value);
+        await axios.post(`/api/configs/${editingConfig.value.alias}/splash/android`, formDataAndroidSplash, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        ElMessage.success("Android 启动图上传成功！");
+      } catch (error) {
+        ElMessage.warning(
+          "配置更新成功，但 Android 启动图上传失败：" +
+            (error.response?.data?.error || error.message)
+        );
+      }
+    }
+
     closeEditDialog();
     loadConfigs();
   } catch (error) {
@@ -2989,6 +3274,106 @@ const handleEditLogoChange = file => {
     img.src = e.target.result;
   };
   reader.readAsDataURL(file.raw);
+};
+
+// 编辑：iOS 启动图选择（1125x2436 PNG）
+const handleEditIOSSplashChange = file => {
+  if (editingConfig.value?.splashscreenIosStyle !== "storyboard") {
+    ElMessage.warning("当前 iOS 启动屏样式非 storyboard，无需上传");
+    editIOSSplashUploadRef.value?.clearFiles();
+    return;
+  }
+  if (file.raw.type !== "image/png") {
+    ElMessage.error("iOS 启动图必须是 PNG 格式");
+    editIOSSplashUploadRef.value?.clearFiles();
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.width !== 1125 || img.height !== 2436) {
+        ElMessage.error(`iOS 启动图尺寸必须是 1125x2436，当前尺寸：${img.width}x${img.height}`);
+        editIOSSplashUploadRef.value?.clearFiles();
+        editIOSSplashFile.value = null;
+        editIOSSplashPreview.value = "";
+        return;
+      }
+      editIOSSplashFile.value = file.raw;
+      editIOSSplashPreview.value = e.target.result;
+      editIOSSplashUrl.value = "";
+    };
+    img.onerror = () => {
+      ElMessage.error("图片加载失败，请重新选择");
+      editIOSSplashUploadRef.value?.clearFiles();
+      editIOSSplashFile.value = null;
+      editIOSSplashPreview.value = "";
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file.raw);
+};
+
+const handleEditIOSSplashRemove = () => {
+  editIOSSplashFile.value = null;
+  editIOSSplashPreview.value = "";
+};
+
+const deleteEditIOSSplash = () => {
+  editIOSSplashFile.value = null;
+  editIOSSplashPreview.value = "";
+  editIOSSplashUrl.value = "";
+  editIOSSplashUploadRef.value?.clearFiles();
+};
+
+// 编辑：Android 启动图选择（1080x1882 PNG）
+const handleEditAndroidSplashChange = file => {
+  if (editingConfig.value?.splashscreenAndroidStyle !== "default") {
+    ElMessage.warning("当前 Android 启动屏样式非 default，无需上传");
+    editAndroidSplashUploadRef.value?.clearFiles();
+    return;
+  }
+  if (file.raw.type !== "image/png") {
+    ElMessage.error("Android 启动图必须是 PNG 格式");
+    editAndroidSplashUploadRef.value?.clearFiles();
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.width !== 1080 || img.height !== 1882) {
+        ElMessage.error(`Android 启动图尺寸必须是 1080x1882，当前尺寸：${img.width}x${img.height}`);
+        editAndroidSplashUploadRef.value?.clearFiles();
+        editAndroidSplashFile.value = null;
+        editAndroidSplashPreview.value = "";
+        return;
+      }
+      editAndroidSplashFile.value = file.raw;
+      editAndroidSplashPreview.value = e.target.result;
+      editAndroidSplashUrl.value = "";
+    };
+    img.onerror = () => {
+      ElMessage.error("图片加载失败，请重新选择");
+      editAndroidSplashUploadRef.value?.clearFiles();
+      editAndroidSplashFile.value = null;
+      editAndroidSplashPreview.value = "";
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file.raw);
+};
+
+const handleEditAndroidSplashRemove = () => {
+  editAndroidSplashFile.value = null;
+  editAndroidSplashPreview.value = "";
+};
+
+const deleteEditAndroidSplash = () => {
+  editAndroidSplashFile.value = null;
+  editAndroidSplashPreview.value = "";
+  editAndroidSplashUrl.value = "";
+  editAndroidSplashUploadRef.value?.clearFiles();
 };
 
 // 处理编辑时的 Logo 文件移除
@@ -3595,6 +3980,22 @@ defineExpose({
   vertical-align: middle;
 }
 
+.table-splash-image {
+  width: 60px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+  vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid #dcdfe6;
+  transition: all 0.3s;
+}
+
+.table-splash-image:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 .logo-placeholder {
   display: flex;
   flex-direction: column;
@@ -3607,6 +4008,63 @@ defineExpose({
 
 .logo-placeholder .el-icon {
   font-size: 32px;
+}
+
+.splash-section {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.splash-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.splash-label {
+  font-size: 12px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.splash-image {
+  width: 80px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #dcdfe6;
+  transition: all 0.3s;
+}
+
+.splash-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.splash-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 140px;
+  color: #999;
+  font-size: 12px;
+  gap: 4px;
+  background-color: #fafafa;
+  border: 1px dashed #dcdfe6;
+  border-radius: 4px;
+}
+
+.splash-placeholder .el-icon {
+  font-size: 24px;
 }
 
 .card-actions {

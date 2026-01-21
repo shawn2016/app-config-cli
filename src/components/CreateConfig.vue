@@ -375,6 +375,9 @@
             <el-menu-item index="feature-switch">
               <span>功能开关</span>
             </el-menu-item>
+            <el-menu-item index="splashscreen-config">
+              <span>启动屏配置</span>
+            </el-menu-item>
             <el-menu-item index="other-files">
               <span>其他文件</span>
             </el-menu-item>
@@ -751,6 +754,125 @@
               </el-form-item>
             </el-collapse-item>
 
+            <el-collapse-item title="启动屏配置" name="splashscreen-config" id="splashscreen-config">
+              <template #title>
+                <span class="collapse-title">启动屏配置</span>
+              </template>
+              <el-form-item label="iOS 启动屏样式">
+                <el-select v-model="formData.splashscreenIosStyle" placeholder="请选择 iOS 启动屏样式">
+                  <el-option label="通用（无需自定义）" value="common" />
+                  <el-option label="Storyboard (自定义启动页)" value="storyboard" />
+                </el-select>
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  选择 Storyboard 时需要上传自定义 iOS 启动图（1125x2436 PNG），文件名自动保存为 ios启动图.png
+                </div>
+              </el-form-item>
+
+              <el-form-item label="iOS 启动图" v-if="formData.splashscreenIosStyle === 'storyboard'">
+                <div style="display: flex; align-items: flex-start; gap: 20px;">
+                  <div v-if="iosSplashPreview" style="position: relative; display: inline-block;">
+                    <img 
+                      :src="iosSplashPreview" 
+                      alt="iOS 启动图预览" 
+                      style="width: 140px; height: 300px; border: 1px solid #dcdfe6; border-radius: 8px; object-fit: cover; background: #f5f7fa;"
+                    />
+                    <el-button
+                      type="danger"
+                      :icon="Delete"
+                      circle
+                      size="small"
+                      style="position: absolute; top: -8px; right: -8px;"
+                      @click="deleteIOSSplash"
+                      title="删除 iOS 启动图"
+                    />
+                  </div>
+                  <div v-else style="width: 140px; height: 300px; border: 1px dashed #dcdfe6; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fafafa; color: #909399; font-size: 12px; text-align: center; padding: 10px;">
+                    暂无 iOS 启动图
+                  </div>
+                  <div style="flex: 1;">
+                    <el-upload
+                      ref="iosSplashUploadRef"
+                      :auto-upload="false"
+                      :on-change="handleIOSSplashChange"
+                      :on-remove="handleIOSSplashRemove"
+                      :limit="1"
+                      accept="image/png"
+                      :show-file-list="false"
+                    >
+                      <template #trigger>
+                        <el-button type="primary">
+                          <el-icon><Upload /></el-icon>
+                          选择 iOS 启动图
+                        </el-button>
+                      </template>
+                    </el-upload>
+                    <div class="form-tip" style="margin-top: 8px;">
+                      <el-icon><InfoFilled /></el-icon>
+                      必须为 PNG，尺寸 1125x2436，文件将保存为 <code>ios启动图.png</code>
+                    </div>
+                  </div>
+                </div>
+              </el-form-item>
+
+              <el-form-item label="Android 启动屏样式">
+                <el-select v-model="formData.splashscreenAndroidStyle" placeholder="请选择 Android 启动屏样式">
+                  <el-option label="通用（无需自定义）" value="common" />
+                  <el-option label="Default (自定义启动页)" value="default" />
+                </el-select>
+                <div class="form-tip">
+                  <el-icon><InfoFilled /></el-icon>
+                  选择 Default 时需上传自定义 Android 启动图（1080x1882 PNG），文件名自动保存为 android启动图.png
+                </div>
+              </el-form-item>
+
+              <el-form-item label="Android 启动图" v-if="formData.splashscreenAndroidStyle === 'default'">
+                <div style="display: flex; align-items: flex-start; gap: 20px;">
+                  <div v-if="androidSplashPreview" style="position: relative; display: inline-block;">
+                    <img 
+                      :src="androidSplashPreview" 
+                      alt="Android 启动图预览" 
+                      style="width: 140px; height: 260px; border: 1px solid #dcdfe6; border-radius: 8px; object-fit: cover; background: #f5f7fa;"
+                    />
+                    <el-button
+                      type="danger"
+                      :icon="Delete"
+                      circle
+                      size="small"
+                      style="position: absolute; top: -8px; right: -8px;"
+                      @click="deleteAndroidSplash"
+                      title="删除 Android 启动图"
+                    />
+                  </div>
+                  <div v-else style="width: 140px; height: 260px; border: 1px dashed #dcdfe6; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fafafa; color: #909399; font-size: 12px; text-align: center; padding: 10px;">
+                    暂无 Android 启动图
+                  </div>
+                  <div style="flex: 1;">
+                    <el-upload
+                      ref="androidSplashUploadRef"
+                      :auto-upload="false"
+                      :on-change="handleAndroidSplashChange"
+                      :on-remove="handleAndroidSplashRemove"
+                      :limit="1"
+                      accept="image/png"
+                      :show-file-list="false"
+                    >
+                      <template #trigger>
+                        <el-button type="primary">
+                          <el-icon><Upload /></el-icon>
+                          选择 Android 启动图
+                        </el-button>
+                      </template>
+                    </el-upload>
+                    <div class="form-tip" style="margin-top: 8px;">
+                      <el-icon><InfoFilled /></el-icon>
+                      必须为 PNG，尺寸 1080x1882，文件将保存为 <code>android启动图.png</code>
+                    </div>
+                  </div>
+                </div>
+              </el-form-item>
+            </el-collapse-item>
+
             <el-collapse-item title="其他文件" name="other-files" id="other-files">
               <template #title>
                 <span class="collapse-title">其他文件</span>
@@ -853,7 +975,7 @@ const aliasValidating = ref(false);
 const aliasError = ref('');
 const oldAlias = ref('');
 const activeNavItem = ref('');
-const activeCollapseItems = ref(['version-config', 'basic-config', 'enterprise-config', 'appstore-config', 'certificate-config', 'feature-switch', 'other-files']);
+const activeCollapseItems = ref(['version-config', 'basic-config', 'enterprise-config', 'appstore-config', 'certificate-config', 'feature-switch', 'splashscreen-config', 'other-files']);
 const activeCollapseItemsStep1 = ref(['logo-config', 'package-config']);
 const navMenuCollapsed = ref(false);
 const logoUploadRef = ref(null);
@@ -867,6 +989,12 @@ const mobileprovisionFile = ref(null);
 const mobileprovisionFileName = ref('');
 const otherFilesUploadRef = ref(null);
 const otherFiles = ref([]);
+const iosSplashUploadRef = ref(null);
+const iosSplashFile = ref(null);
+const iosSplashPreview = ref('');
+const androidSplashUploadRef = ref(null);
+const androidSplashFile = ref(null);
+const androidSplashPreview = ref('');
 
 const formData = reactive({
   alias: '',
@@ -891,7 +1019,9 @@ const formData = reactive({
   isSupportEnterprise: false,
   isTest: false,
   isSupportHotUpdate: false,
-  isSupportAppSetting: false
+  isSupportAppSetting: false,
+  splashscreenIosStyle: 'common',
+  splashscreenAndroidStyle: 'common'
 });
 
 // API 地区选项（带域名显示）
@@ -991,6 +1121,19 @@ watch(() => formData.alias, (newAlias) => {
   }
 });
 
+// 如果切换为非自定义样式，则清空对应上传
+watch(() => formData.splashscreenIosStyle, (style) => {
+  if (style !== 'storyboard') {
+    deleteIOSSplash();
+  }
+});
+
+watch(() => formData.splashscreenAndroidStyle, (style) => {
+  if (style !== 'default') {
+    deleteAndroidSplash();
+  }
+});
+
 // 处理导航菜单选择，滚动到对应位置
 const handleNavSelect = (index) => {
   activeNavItem.value = index;
@@ -1069,6 +1212,10 @@ const config: BrandConfig = {
   iosAppId: '${formData.iosAppId || `ai.restosuite.${alias}`}', // iOS Bundle ID
   CFBundleName: '${formData.appEnName}', // iOS Bundle 显示名称，建议与 app_en_name 一致
   teamId: '${formData.teamId || ''}'${formData.teamId ? '' : ', // 请补充团队 ID'}, // iOS 开发团队 ID
+  splashscreen: {
+    iosStyle: '${formData.splashscreenIosStyle || 'storyboard'}',
+    androidStyle: '${formData.splashscreenAndroidStyle || 'default'}',
+  },
 
   // ===== 签名配置 =====
   keystore: '../appConfig/${alias}/${alias}.keystore', // Android 签名文件路径
@@ -1198,6 +1345,106 @@ const deleteLogoPreview = () => {
   logoFile.value = null;
   logoPreview.value = '';
   logoUploadRef.value?.clearFiles();
+};
+
+// 处理 iOS 启动图选择
+const handleIOSSplashChange = (file) => {
+  if (formData.splashscreenIosStyle !== 'storyboard') {
+    ElMessage.warning('当前样式非 Storyboard，无需上传 iOS 启动图');
+    iosSplashUploadRef.value?.clearFiles();
+    return;
+  }
+
+  if (file.raw.type !== 'image/png') {
+    ElMessage.error('iOS 启动图必须是 PNG 格式');
+    iosSplashUploadRef.value?.clearFiles();
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.width !== 1125 || img.height !== 2436) {
+        ElMessage.error(`iOS 启动图尺寸必须是 1125x2436，当前尺寸：${img.width}x${img.height}`);
+        iosSplashUploadRef.value?.clearFiles();
+        iosSplashFile.value = null;
+        iosSplashPreview.value = '';
+        return;
+      }
+      iosSplashFile.value = file.raw;
+      iosSplashPreview.value = e.target.result;
+    };
+    img.onerror = () => {
+      ElMessage.error('图片加载失败，请重新选择');
+      iosSplashUploadRef.value?.clearFiles();
+      iosSplashFile.value = null;
+      iosSplashPreview.value = '';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file.raw);
+};
+
+const handleIOSSplashRemove = () => {
+  iosSplashFile.value = null;
+  iosSplashPreview.value = '';
+};
+
+const deleteIOSSplash = () => {
+  iosSplashFile.value = null;
+  iosSplashPreview.value = '';
+  iosSplashUploadRef.value?.clearFiles();
+};
+
+// 处理 Android 启动图选择
+const handleAndroidSplashChange = (file) => {
+  if (formData.splashscreenAndroidStyle !== 'default') {
+    ElMessage.warning('当前样式非 Default，无需上传 Android 启动图');
+    androidSplashUploadRef.value?.clearFiles();
+    return;
+  }
+
+  if (file.raw.type !== 'image/png') {
+    ElMessage.error('Android 启动图必须是 PNG 格式');
+    androidSplashUploadRef.value?.clearFiles();
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.width !== 1080 || img.height !== 1882) {
+        ElMessage.error(`Android 启动图尺寸必须是 1080x1882，当前尺寸：${img.width}x${img.height}`);
+        androidSplashUploadRef.value?.clearFiles();
+        androidSplashFile.value = null;
+        androidSplashPreview.value = '';
+        return;
+      }
+      androidSplashFile.value = file.raw;
+      androidSplashPreview.value = e.target.result;
+    };
+    img.onerror = () => {
+      ElMessage.error('图片加载失败，请重新选择');
+      androidSplashUploadRef.value?.clearFiles();
+      androidSplashFile.value = null;
+      androidSplashPreview.value = '';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file.raw);
+};
+
+const handleAndroidSplashRemove = () => {
+  androidSplashFile.value = null;
+  androidSplashPreview.value = '';
+};
+
+const deleteAndroidSplash = () => {
+  androidSplashFile.value = null;
+  androidSplashPreview.value = '';
+  androidSplashUploadRef.value?.clearFiles();
 };
 
 // 处理 P12 文件选择
@@ -1335,7 +1582,20 @@ const prevStep = () => {
 const submitForm = async () => {
   try {
     submitting.value = true;
-    const response = await axios.post('/api/configs', formData);
+    
+    // 准备提交数据，将 splashscreen 字段组合
+    const submitData = {
+      ...formData,
+      splashscreen: {
+        iosStyle: formData.splashscreenIosStyle || 'common',
+        androidStyle: formData.splashscreenAndroidStyle || 'common'
+      }
+    };
+    // 删除临时的单个字段
+    delete submitData.splashscreenIosStyle;
+    delete submitData.splashscreenAndroidStyle;
+    
+    const response = await axios.post('/api/configs', submitData);
     ElMessage.success(response.data.message || '配置创建成功！');
     
     // 如果有 logo 文件，上传 logo
@@ -1408,6 +1668,38 @@ const submitForm = async () => {
       }
     }
     
+    // 如果选择了自定义 iOS Storyboard 且上传了文件
+    if (formData.splashscreenIosStyle === 'storyboard' && iosSplashFile.value) {
+      try {
+        const formDataIosSplash = new FormData();
+        formDataIosSplash.append('iosSplash', iosSplashFile.value);
+        await axios.post(`/api/configs/${formData.alias}/splash/ios`, formDataIosSplash, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        ElMessage.success('iOS 启动图上传成功！');
+      } catch (error) {
+        ElMessage.warning('配置创建成功，但 iOS 启动图上传失败：' + (error.response?.data?.error || error.message));
+      }
+    }
+
+    // 如果选择了自定义 Android Default 且上传了文件
+    if (formData.splashscreenAndroidStyle === 'default' && androidSplashFile.value) {
+      try {
+        const formDataAndroidSplash = new FormData();
+        formDataAndroidSplash.append('androidSplash', androidSplashFile.value);
+        await axios.post(`/api/configs/${formData.alias}/splash/android`, formDataAndroidSplash, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        ElMessage.success('Android 启动图上传成功！');
+      } catch (error) {
+        ElMessage.warning('配置创建成功，但 Android 启动图上传失败：' + (error.response?.data?.error || error.message));
+      }
+    }
+
     // 重置表单
     Object.assign(formData, {
       alias: '',
@@ -1432,7 +1724,9 @@ const submitForm = async () => {
       isSupportEnterprise: false,
       isTest: false,
       isSupportHotUpdate: false,
-      isSupportAppSetting: false
+      isSupportAppSetting: false,
+      splashscreenIosStyle: 'common',
+      splashscreenAndroidStyle: 'common'
     });
     // 如果不是 RestosuiteOnlinePro，重置应用设置开关
     if (formData.alias !== 'RestosuiteOnlinePro') {
@@ -1451,6 +1745,9 @@ const submitForm = async () => {
     mobileprovisionUploadRef.value?.clearFiles();
     otherFiles.value = [];
     otherFilesUploadRef.value?.clearFiles();
+    // 清除启动图
+    deleteIOSSplash();
+    deleteAndroidSplash();
     currentStep.value = 0;
     formRef.value?.resetFields();
     
